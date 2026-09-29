@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:siva_sakthi/setting/about_us.dart';
 import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/setting/privacy_policy.dart';
+import 'package:siva_sakthi/setting/profile_info.dart';
 import 'package:siva_sakthi/setting/terms_condition.dart';
 
 
@@ -62,7 +63,9 @@ class SettingScreen extends StatelessWidget {
                 iconAsset: 'assets/setting/profile.png',
                 fallback: Icons.person_outline,
                 title: 'Profile Information',
-                onTap: () {},
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => ProfileScreen()),
+                  ),
               ),
             ]),
             SizedBox(height: h(18)),

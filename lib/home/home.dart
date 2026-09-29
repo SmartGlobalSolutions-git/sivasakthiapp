@@ -1,4 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:siva_sakthi/home/available_chit_screen.dart';
+import 'package:siva_sakthi/home/chit_schem_screen.dart';
+import 'package:siva_sakthi/home/menu.dart';
+import 'package:siva_sakthi/home/notification.dart';
+import 'package:siva_sakthi/setting/about_us.dart';
+import 'package:siva_sakthi/setting/faq_screen.dart';
+import 'package:siva_sakthi/setting/need_help.dart';
+import 'package:siva_sakthi/my_chit/my_chits_screen.dart';
 
 // ==========================================================
 // SIVA SAKTHI CHIT FUNDS - HOME SCREEN
@@ -27,15 +36,44 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
 
   final PageController _bannerController = PageController();
   int _bannerIndex = 0;
+  Timer? _bannerTimer;
+
+  final List<String> _bannerImages = const [
+    'assets/home/banner_1.png',
+    'assets/home/banner_2.png',
+    'assets/home/banner_3.png',
+  ];
 
   String _selectedPlan = 'Smart Savings Scheme';
   final TextEditingController _investmentCtrl = TextEditingController();
   final TextEditingController _emiCtrl = TextEditingController();
   int _noOfEmis = 20;
   int _noOfMembers = 20;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _startBannerAutoScroll();
+  }
+
+  void _startBannerAutoScroll() {
+    _bannerTimer?.cancel();
+    _bannerTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (_bannerController.hasClients) {
+        final nextPage = (_bannerIndex + 1) % _bannerImages.length;
+        _bannerController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _bannerTimer?.cancel();
     _bannerController.dispose();
     _investmentCtrl.dispose();
     _emiCtrl.dispose();
@@ -50,6 +88,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
     double h(double v) => sh * (v / 812);
 
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: Drawer(
+        width: sw * 0.82,
+        backgroundColor: Colors.white,
+        elevation: 16,
+        shape: const RoundedRectangleBorder(),
+        child: const ProfileMenuScreen(),
+      ),
       backgroundColor: Colors.white,
       body: SafeArea(
         bottom: false,
@@ -95,7 +141,12 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       padding: EdgeInsets.fromLTRB(w(16), h(12), w(16), h(12)),
       child: Row(
         children: [
-          Icon(Icons.menu, color: kBlack, size: w(24)),
+          GestureDetector(
+            onTap: () {
+              _scaffoldKey.currentState?.openDrawer();
+            },
+            child: Icon(Icons.menu, color: kBlack, size: w(24)),
+          ),
           SizedBox(width: w(16)),
           Text(
             'Hello Akhil',
@@ -107,30 +158,60 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
             ),
           ),
           const Spacer(),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: w(12), vertical: h(7)),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: kBorderGrey, width: 0.6),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.person_outline, size: w(14), color: kBlack),
-                SizedBox(width: w(4)),
-                const Text(
-                  'Need Help ?',
-                  style: TextStyle(
-                    color: kBlue,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
-                  ),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NeedHelpScreen(),
                 ),
-              ],
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: w(12), vertical: h(7)),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: kBorderGrey, width: 0.6),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/icons/need_help.png',
+                    width: w(14),
+                    height: w(14),
+                    fit: BoxFit.contain,
+                  ),
+                  SizedBox(width: w(4)),
+                  const Text(
+                    'Need Help ?',
+                    style: TextStyle(
+                      color: kBlue,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           SizedBox(width: w(14)),
-          Icon(Icons.notifications_none_rounded, color: kBlack, size: w(24)),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationScreen(),
+                ),
+              );
+            },
+            child: Image.asset(
+              'assets/icons/notifi.png',
+              width: w(24),
+              height: w(24),
+              fit: BoxFit.contain,
+            ),
+          ),
         ],
       ),
     );
@@ -142,26 +223,25 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       padding: EdgeInsets.symmetric(horizontal: w(0)),
       child: SizedBox(
         height: h(171),
-        child: PageView(
+        child: PageView.builder(
           controller: _bannerController,
           onPageChanged: (i) => setState(() => _bannerIndex = i),
-          children: [
-            _bannerCard(w, h),
-            _bannerCard(w, h),
-            _bannerCard(w, h),
-          ],
+          itemCount: _bannerImages.length,
+          itemBuilder: (context, index) =>
+              _bannerCard(w, h, _bannerImages[index]),
         ),
       ),
     );
   }
 
-  Widget _bannerCard(double Function(double) w, double Function(double) h) {
+  Widget _bannerCard(
+      double Function(double) w, double Function(double) h, String imagePath) {
     return GestureDetector(
       onTap: () {
         // Navigate to Plan Screen
       },
       child: Image.asset(
-        'assets/siva_sakthi/home_banner.png',
+        imagePath,
         width: double.infinity,
         height: h(171),
         fit: BoxFit.cover,
@@ -178,7 +258,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
     return Center(
       child: Row(
         mainAxisSize: MainAxisSize.min,
-        children: List.generate(4, (i) {
+        children: List.generate(_bannerImages.length, (i) {
           final bool active = i == _bannerIndex;
           return Container(
             margin: EdgeInsets.symmetric(horizontal: w(2)),
@@ -208,6 +288,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               title: 'My Chit',
               subtitle: 'Chit Overview',
               endColor: kGreenEnd,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MyChitsScreen(),
+                  ),
+                );
+              },
             ),
           ),
           SizedBox(width: w(8)),
@@ -218,6 +306,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               title: 'Available Chits',
               subtitle: 'View available chit plans',
               endColor: kYellowEnd,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AvailableChitScreen(),
+                  ),
+                );
+              },
             ),
           ),
           SizedBox(width: w(8)),
@@ -228,6 +324,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               title: 'Chit Scheme',
               subtitle: 'Explore available chit plans',
               endColor: kRedEnd,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ChitSchemScreen(),
+                  ),
+                );
+              },
             ),
           ),
         ],
@@ -242,59 +346,63 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
         required String title,
         required String subtitle,
         required Color endColor,
+        VoidCallback? onTap,
       }) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: w(10), vertical: h(11)),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(w(5.5)),
-        border: Border.all(color: kDivider, width: 0.68),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, endColor],
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: w(10), vertical: h(11)),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(w(5.5)),
+          border: Border.all(color: kDivider, width: 0.68),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.white, endColor],
+          ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                width: w(20),
-                height: w(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFDFDFDF), width: 0.2),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: w(20),
+                  height: w(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFDFDFDF), width: 0.2),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: w(11), color: kBlack),
                 ),
-                alignment: Alignment.center,
-                child: Icon(icon, size: w(11), color: kBlack),
+                Icon(Icons.chevron_right, size: w(14), color: kBlack),
+              ],
+            ),
+            SizedBox(height: h(10)),
+            Text(
+              title,
+              style: TextStyle(
+                color: kBlack,
+                fontSize: w(11),
+                fontWeight: FontWeight.w600,
               ),
-              Icon(Icons.chevron_right, size: w(14), color: kBlack),
-            ],
-          ),
-          SizedBox(height: h(10)),
-          Text(
-            title,
-            style: TextStyle(
-              color: kBlack,
-              fontSize: w(11),
-              fontWeight: FontWeight.w600,
             ),
-          ),
-          SizedBox(height: h(2)),
-          Text(
-            subtitle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: kBlack.withOpacity(0.6),
-              fontSize: w(7),
-              fontWeight: FontWeight.w400,
+            SizedBox(height: h(2)),
+            Text(
+              subtitle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: kBlack.withOpacity(0.6),
+                fontSize: w(7),
+                fontWeight: FontWeight.w400,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -307,133 +415,160 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       child: Container(
         padding: EdgeInsets.all(w(14)),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(w(10)),
-          border: Border.all(color: kDivider, width: 0.8),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(w(14)),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 0.8),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Rupee circle icon
                 Container(
-                  width: w(38),
-                  height: w(38),
-                  decoration: BoxDecoration(
-                    color: kBlue.withOpacity(0.2),
+                  width: w(44),
+                  height: w(44),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFDCEBFC),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Container(
-                    width: w(24),
-                    height: w(24),
+                    width: w(30),
+                    height: w(30),
                     decoration: const BoxDecoration(
                       color: kBlue,
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: Text('₹',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: w(13),
-                            fontWeight: FontWeight.w700)),
+                    child: Text(
+                      '₹',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: w(16),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
-                SizedBox(width: w(10)),
+                SizedBox(width: w(12)),
+                // Payment Due title and pending payment count
                 Expanded(
-                  child: Text(
-                    'Payment Due',
-                    style: TextStyle(
-                      color: kBlue,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Payment Due',
+                        style: TextStyle(
+                          color: kBlue,
+                          fontSize: w(18),
+                          fontWeight: FontWeight.w600,
+                          height: 1.1,
+                        ),
+                      ),
+                      SizedBox(height: h(4)),
+                      RichText(
+                        text: TextSpan(
+                          style: TextStyle(
+                            color: kBlack,
+                            fontSize: w(13),
+                            fontWeight: FontWeight.w400,
+                          ),
+                          children: [
+                            const TextSpan(text: 'You have '),
+                            TextSpan(
+                              text: '1',
+                              style: TextStyle(
+                                color: kRed,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const TextSpan(text: ' pending payment'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 GestureDetector(
                   onTap: () {},
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text('View  Details',
-                          style: TextStyle(
-                            color: kBlue,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          )),
-                      Icon(Icons.chevron_right, size: 16, color: kBlue),
+                    children: [
+                      Text(
+                        'View Details',
+                        style: TextStyle(
+                          color: kBlue,
+                          fontSize: w(13),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(width: w(2)),
+                      Icon(Icons.chevron_right, size: w(18), color: kBlue),
                     ],
                   ),
                 ),
               ],
             ),
-            Padding(
-              padding: EdgeInsets.only(left: w(48), top: h(2)),
-              child: RichText(
-                text: TextSpan(
-                  style: TextStyle(
-                    color: kBlack,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  children: [
-                    const TextSpan(text: 'You have '),
-                    TextSpan(
-                      text: '1',
-                      style: TextStyle(color: kRed, fontWeight: FontWeight.w600),
-                    ),
-                    const TextSpan(text: ' pending payment'),
-                  ],
-                ),
-              ),
-            ),
             SizedBox(height: h(14)),
+            // Inner card
             Container(
               width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: w(16), vertical: h(12)),
+              padding: EdgeInsets.symmetric(horizontal: w(16), vertical: h(14)),
               decoration: BoxDecoration(
                 color: kCardBg,
-                borderRadius: BorderRadius.circular(w(10)),
-                border: Border.all(color: kDivider, width: 0.5),
+                borderRadius: BorderRadius.circular(w(12)),
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Due Date',
-                            style: TextStyle(
-                                color: kBlack.withOpacity(0.7),
-                                fontSize: w(12),
-                                fontWeight: FontWeight.w400)),
-                        SizedBox(height: h(4)),
-                        Text('25 May 2025',
-                            style: TextStyle(
-                                color: kRed,
-                                fontSize: w(14),
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Due Date',
+                        style: TextStyle(
+                          color: const Color(0xFF6B7280),
+                          fontSize: w(13),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: h(6)),
+                      Text(
+                        '25 May 2025',
+                        style: TextStyle(
+                          color: kRed,
+                          fontSize: w(15),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Amount',
-                            style: TextStyle(
-                                color: kBlack.withOpacity(0.7),
-                                fontSize: w(12),
-                                fontWeight: FontWeight.w400)),
-                        SizedBox(height: h(4)),
-                        Text('5,000',
-                            style: TextStyle(
-                                color: kBlack,
-                                fontSize: w(14),
-                                fontWeight: FontWeight.w700)),
-                      ],
-                    ),
+                  SizedBox(width: w(28)),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Amount',
+                        style: TextStyle(
+                          color: const Color(0xFF6B7280),
+                          fontSize: w(13),
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                      SizedBox(height: h(6)),
+                      Text(
+                        '5,000',
+                        style: TextStyle(
+                          color: kBlack,
+                          fontSize: w(16),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ),
+                  const Spacer(),
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
@@ -445,11 +580,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                         borderRadius: BorderRadius.circular(w(20)),
                       ),
                     ),
-                    child: Text('Pay Now',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: w(13),
-                            fontWeight: FontWeight.w700)),
+                    child: Text(
+                      'Pay Now',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: w(13),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -459,35 +597,53 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       ),
     );
   }
-
   // ---------------- Payment Assistance card ----------------
   Widget _buildPaymentAssistanceCard(
       double Function(double) w, double Function(double) h) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: w(16)),
       child: Container(
-        padding: EdgeInsets.all(w(16)),
+        height: h(80),
+        padding: EdgeInsets.symmetric(horizontal: w(14), vertical: h(10)),
         decoration: BoxDecoration(
-          color: kCardBg,
-          borderRadius: BorderRadius.circular(w(12)),
+          color: const Color(0xFFFAFAFA),
+          borderRadius: BorderRadius.circular(w(8)),
+          border: Border.all(color: const Color(0xFFEEEAEA), width: 0.8),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000), // #000000 @ 8%
+              offset: Offset(0, 8),
+              blurRadius: 16,
+              spreadRadius: 0,
+            ),
+          ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Payment Assistance',
-                      style: TextStyle(
-                          color: kBlack,
-                          fontSize: w(16),
-                          fontWeight: FontWeight.w700)),
-                  SizedBox(height: h(6)),
-                  Text('Need help paying your due?\nContact your agent.',
-                      style: TextStyle(
-                          color: kBlack.withOpacity(0.7),
-                          fontSize: w(12),
-                          height: 1.4)),
+                  Text(
+                    'Payment Assistance',
+                    style: TextStyle(
+                      color: kBlack,
+                      fontSize: w(16),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: h(3)),
+                  Text(
+                    'Need help paying your due?\nContact your agent.',
+                    style: TextStyle(
+                      color: const Color(0xFF6B7280),
+                      fontSize: w(12),
+                      height: 1.25,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -497,16 +653,19 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: kBlue,
                 elevation: 0,
-                padding: EdgeInsets.symmetric(horizontal: w(20), vertical: h(12)),
+                padding: EdgeInsets.symmetric(horizontal: w(20), vertical: h(9)),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(w(24)),
+                  borderRadius: BorderRadius.circular(w(20)),
                 ),
               ),
-              child: Text('Call Now',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: w(13),
-                      fontWeight: FontWeight.w700)),
+              child: Text(
+                'Call Now',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: w(14),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -757,20 +916,37 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
         ),
         SizedBox(height: h(12)),
         SizedBox(
-          height: h(190),
+          height: h(235),
           child: ListView.separated(
+            clipBehavior: Clip.none,
             scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: w(16)),
+            padding: EdgeInsets.fromLTRB(w(16), h(6), w(16), h(30)),
             itemCount: plans.length,
-            separatorBuilder: (_, __) => SizedBox(width: w(12)),
+            separatorBuilder: (_, __) => SizedBox(width: w(14)),
             itemBuilder: (context, index) {
               final plan = plans[index];
+              final bool isPopular = plan['popular'] as bool;
               return Container(
-                width: w(200),
-                padding: EdgeInsets.all(w(14)),
+                width: w(220),
+                padding: EdgeInsets.fromLTRB(w(15), h(14), w(15), h(14)),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(w(12)),
-                  border: Border.all(color: kDivider),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(w(16)),
+                  border: Border.all(color: const Color(0xFFE4E4E4), width: 1),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x1A000000), // #000000 @ 10%
+                      offset: Offset(0, 6),
+                      blurRadius: 13,
+                      spreadRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: Color(0x17000000), // #000000 @ 9%
+                      offset: Offset(0, 24),
+                      blurRadius: 24,
+                      spreadRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -778,58 +954,98 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(plan['slots'] as String,
-                            style: TextStyle(
-                                color: kBlack.withOpacity(0.6), fontSize: w(11))),
-                        if (plan['popular'] as bool)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: w(8), vertical: h(3)),
-                            decoration: BoxDecoration(
-                              color: kRed.withOpacity(0.08),
-                              border: Border.all(
-                                  color: kRed.withOpacity(0.4), width: 0.8),
-                              borderRadius: BorderRadius.circular(w(4)),
-                            ),
-                            child: Text('Popular',
-                                style: TextStyle(color: kRed, fontSize: w(9))),
+                        Text(
+                          plan['slots'] as String,
+                          style: TextStyle(
+                            color: const Color(0xFF6B7280),
+                            fontSize: w(12),
+                            fontWeight: FontWeight.w400,
                           ),
+                        ),
+                        if (isPopular)
+                          CustomPaint(
+                            painter: _DottedBorderPainter(
+                              color: const Color(0xFFE53935),
+                              strokeWidth: 1.0,
+                              dashWidth: 3.0,
+                              dashSpace: 2.0,
+                              radius: w(4),
+                            ),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: w(8), vertical: h(3)),
+                              child: Text(
+                                'Popular',
+                                style: TextStyle(
+                                  color: const Color(0xFFE53935),
+                                  fontSize: w(11),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          const SizedBox(height: 20),
                       ],
                     ),
-                    SizedBox(height: h(10)),
-                    Text('₹ ${plan['value']}',
-                        style: TextStyle(
-                            color: kBlue,
-                            fontSize: w(19),
-                            fontWeight: FontWeight.w700)),
+                    SizedBox(height: h(8)),
+                    Text(
+                      '₹ ${plan['value']}',
+                      style: TextStyle(
+                        color: kBlue,
+                        fontSize: w(21),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     SizedBox(height: h(4)),
-                    Text('Subscription - ₹ ${plan['sub']}',
-                        style: TextStyle(color: kBlue, fontSize: w(11))),
-                    SizedBox(height: h(10)),
-                    Text('Instalment - 60 months',
-                        style: TextStyle(
-                            color: kBlack.withOpacity(0.7), fontSize: w(10.5))),
-                    Text('Start date - 01-Oct-2026',
-                        style: TextStyle(
-                            color: kBlack.withOpacity(0.7), fontSize: w(10.5))),
+                    Text(
+                      'Subscription - ₹ ${plan['sub']}',
+                      style: TextStyle(
+                        color: kBlue,
+                        fontSize: w(12),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: h(8)),
+                    Text(
+                      'Instalment - 60 months',
+                      style: TextStyle(
+                        color: const Color(0xFF6B7280),
+                        fontSize: w(10.5),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    SizedBox(height: h(2)),
+                    Text(
+                      'Start date - 01-Oct - 2026',
+                      style: TextStyle(
+                        color: const Color(0xFF6B7280),
+                        fontSize: w(10.5),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
                     const Spacer(),
                     SizedBox(
                       width: double.infinity,
+                      height: h(38),
                       child: ElevatedButton(
                         onPressed: () {},
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kBlue,
                           elevation: 0,
-                          padding: EdgeInsets.symmetric(vertical: h(10)),
+                          padding: EdgeInsets.zero,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(w(20)),
+                            borderRadius: BorderRadius.circular(w(24)),
                           ),
                         ),
-                        child: Text('Enquire now',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: w(12),
-                                fontWeight: FontWeight.w600)),
+                        child: Text(
+                          'Enquire now',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: w(13),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -853,10 +1069,36 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           Text('Quick Links',
               style: TextStyle(
                   color: kBlack, fontSize: w(18), fontWeight: FontWeight.w600)),
+          SizedBox(height: h(14)),
+          _quickLinkTile(
+            w,
+            h,
+            iconAsset: 'assets/setting/about.png',
+            fallbackIcon: Icons.info_outline,
+            title: 'About Siva Sakthi',
+            subtitle: 'About Siva Sakthi',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const AboutUsScreen()),
+              );
+            },
+          ),
           SizedBox(height: h(12)),
-          _quickLinkTile(w, h, Icons.info_outline, 'About Siva Sakthi', 'About Siva Sakthi'),
-          SizedBox(height: h(10)),
-          _quickLinkTile(w, h, Icons.help_outline, 'Faq', 'Frequently asked questions'),
+          _quickLinkTile(
+            w,
+            h,
+            iconAsset: 'assets/setting/faq.png',
+            fallbackIcon: Icons.help_outline,
+            title: 'Faq',
+            subtitle: 'Frequently asked questions',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FaqScreen()),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -864,39 +1106,76 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
 
   Widget _quickLinkTile(
       double Function(double) w,
-      double Function(double) h,
-      IconData icon,
-      String title,
-      String subtitle,
-      ) {
+      double Function(double) h, {
+      required String iconAsset,
+      required IconData fallbackIcon,
+      required String title,
+      required String subtitle,
+      required VoidCallback onTap,
+      }) {
     return GestureDetector(
-      onTap: () {},
+      onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: w(14), vertical: h(14)),
+        height: h(59),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: w(14)),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(w(10)),
-          border: Border.all(color: kDivider),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(w(8)),
+          border: Border.all(color: const Color(0xFFE5E7EB), width: 0.8),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x14000000), // #000000 @ 8%
+              offset: Offset(0, 8),
+              blurRadius: 16,
+              spreadRadius: 0,
+            ),
+            BoxShadow(
+              color: Color(0x0A000000), // #000000 @ 4%
+              offset: Offset(0, 0),
+              blurRadius: 4,
+              spreadRadius: 0,
+            ),
+          ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, color: kBlue, size: w(20)),
+            Image.asset(
+              iconAsset,
+              width: w(22),
+              height: w(22),
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) =>
+                  Icon(fallbackIcon, color: kBlue, size: w(22)),
+            ),
             SizedBox(width: w(12)),
             Expanded(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title,
-                      style: TextStyle(
-                          color: kBlack,
-                          fontSize: w(14),
-                          fontWeight: FontWeight.w600)),
-                  Text(subtitle,
-                      style: TextStyle(
-                          color: kBlack.withOpacity(0.6), fontSize: w(11))),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: kBlack,
+                      fontSize: w(14),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(height: h(2)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: const Color(0xFF9E9E9E),
+                      fontSize: w(11.5),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: kBlack.withOpacity(0.5), size: w(18)),
+            Icon(Icons.chevron_right, color: kBlack, size: w(20)),
           ],
         ),
       ),
@@ -935,5 +1214,64 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
         Text(label, style: TextStyle(color: color, fontSize: w(10))),
       ],
     );
+  }
+}
+
+// ---------------- Dotted Border Painter ----------------
+class _DottedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double dashWidth;
+  final double dashSpace;
+  final double radius;
+
+  _DottedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1.0,
+    this.dashWidth = 3.0,
+    this.dashSpace = 2.0,
+    this.radius = 4.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(
+        strokeWidth / 2,
+        strokeWidth / 2,
+        size.width - strokeWidth,
+        size.height - strokeWidth,
+      ),
+      Radius.circular(radius),
+    );
+
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics();
+
+    for (final metric in metrics) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        final double length = (distance + dashWidth < metric.length)
+            ? dashWidth
+            : metric.length - distance;
+        final extractPath = metric.extractPath(distance, distance + length);
+        canvas.drawPath(extractPath, paint);
+        distance += dashWidth + dashSpace;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DottedBorderPainter oldDelegate) {
+    return oldDelegate.color != color ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.dashWidth != dashWidth ||
+        oldDelegate.dashSpace != dashSpace ||
+        oldDelegate.radius != radius;
   }
 }

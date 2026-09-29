@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:siva_sakthi/setting/need_help.dart';
-import 'package:siva_sakthi/setting/setting.dart';
+import 'package:siva_sakthi/OnBoarding_Screen/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'Siva Sakthi',
-          home: SettingScreen(),
+          home:SplashScreen(),
         );
       },
     );

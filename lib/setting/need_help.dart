@@ -83,7 +83,7 @@ class _TextStyles {
 }
 
 class NeedHelpScreen extends StatelessWidget {
-  const NeedHelpScreen({super.key, this.userName = 'Akhil'});
+  const NeedHelpScreen({super.key, this.userName = 'Bharathi'});
 
   /// Shown in the greeting and the "Chat to ... 24/7" caption.
   final String userName;

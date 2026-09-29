@@ -5,12 +5,12 @@ class _Colors {
   static const Color pageBg = Color(0xFFF2F3F5);
   static const Color white = Color(0xFFFFFFFF);
   static const Color textBlack = Color(0xFF000000);
-  static const Color iconGreen = Color(0xFF058334); // phone vector, #058334
+  static const Color iconGreen = Color(0xFF058334);
   static const Color iconBorder = Color(0xFFE0E0E0);
   static const Color chevron = Color(0xFF9E9E9E);
-  static const Color cardBorder = Color(0x1A000000); // #000000 @ 10%, 0.5px
-  static const Color cardShadow = Color(0x40000000); // #000000 @ 25%, y2 blur4
-  static const Color divider = Color(0x63000000); // #000000 @ 39%, 0.2px
+  static const Color cardBorder = Color(0x1A000000);
+  static const Color cardShadow = Color(0x40000000);
+  static const Color divider = Color(0x63000000);
 }
 
 class _TextStyles {
