@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:siva_sakthi/calculator/calculator_screen.dart';
 import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
 import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
+import 'package:siva_sakthi/new_user/new_calculator.dart';
+import 'package:siva_sakthi/new_user/new_menu.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -290,7 +291,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: _buildDrawer(scaleW),
+      drawer: const NewUserMenuScreen(),
       // 100% Stiff Bottom Navigation Bar via Scaffold (never scrolls)
       bottomNavigationBar: _buildBottomNavigationBar(scaleW, bottomPadding),
       body: Column(
@@ -372,7 +373,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: () {
-                      // Navigation disabled as requested
+                      _scaffoldKey.currentState?.openDrawer();
                     },
                     child: Image.asset(
                       'assets/images/menu.png',
@@ -1470,7 +1471,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CalculatorScreen(),
+                  builder: (context) => const CalculatorScreen_new(),
                 ),
               ).then((_) {
                 setState(() => _selectedBottomNavIndex = 0);
@@ -1542,108 +1543,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               maxLines: 1,
               overflow: TextOverflow.visible,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Side Drawer
-  Widget _buildDrawer(double scaleW) {
-    return Drawer(
-      backgroundColor: Colors.white,
-      child: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 20 * scaleW, vertical: 24),
-              color: const Color(0xFFF8FAFC),
-              child: Row(
-                children: [
-                  Image.asset(
-                    'assets/images/sivasakthi.png',
-                    width: 48 * scaleW,
-                    height: 48 * scaleW,
-                    fit: BoxFit.contain,
-                  ),
-                  SizedBox(width: 14 * scaleW),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'SIVA SAKTHI CHITS',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14 * scaleW,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF1E2638),
-                          ),
-                        ),
-                        Text(
-                          'Trusted Savings Partner',
-                          style: GoogleFonts.poppins(
-                            fontSize: 11 * scaleW,
-                            color: const Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.home_outlined, color: Color(0xFF3C93F4)),
-              title: Text('Home', style: GoogleFonts.poppins(fontSize: 13.5 * scaleW)),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.calculate_outlined, color: Color(0xFF3C93F4)),
-              title: Text('Chit Calculator', style: GoogleFonts.poppins(fontSize: 13.5 * scaleW)),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const CalculatorScreen()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.support_agent_outlined, color: Color(0xFF3C93F4)),
-              title: Text('Enquiry / Help', style: GoogleFonts.poppins(fontSize: 13.5 * scaleW)),
-              onTap: () {
-                Navigator.pop(context);
-                showChitEnquiryDialog(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.info_outline, color: Color(0xFF3C93F4)),
-              title: Text('About Company', style: GoogleFonts.poppins(fontSize: 13.5 * scaleW)),
-              onTap: () {
-                Navigator.pop(context);
-                _showAboutBottomSheet(scaleW);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.quiz_outlined, color: Color(0xFF3C93F4)),
-              title: Text('FAQ', style: GoogleFonts.poppins(fontSize: 13.5 * scaleW)),
-              onTap: () {
-                Navigator.pop(context);
-                _showFaqBottomSheet(scaleW);
-              },
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'v1.0.0 • Siva Saravana Chits (P) LTD',
-                style: GoogleFonts.poppins(
-                  fontSize: 10 * scaleW,
-                  color: const Color(0xFF94A3B8),
-                ),
-              ),
             ),
           ],
         ),

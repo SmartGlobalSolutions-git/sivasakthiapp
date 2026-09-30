@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ---- Figma tokens (Notification) ----
 class _Colors {
@@ -25,12 +25,6 @@ class _Colors {
 }
 
 class _TextStyles {
-  static const TextStyle appBarTitle = TextStyle(
-    fontFamily: 'Inter',
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    color: _Colors.black,
-  );
 
   // Title — Inter 600, 13px, #000000
   static const TextStyle title = TextStyle(
@@ -210,28 +204,29 @@ class NotificationScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: _Colors.pageBg,
       appBar: AppBar(
-        backgroundColor: _Colors.white,
+        backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
-        surfaceTintColor: Colors.transparent,
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
-        toolbarHeight: 57,
-        leadingWidth: 38.5,
+        automaticallyImplyLeading: false,
         titleSpacing: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 13),
-          child: IconButton(
-            padding: EdgeInsets.zero,
-            icon: const Icon(Icons.arrow_back, color: _Colors.black),
-            onPressed: () => Navigator.of(context).maybePop(),
+        centerTitle: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        title: Text(
+          'Notification',
+          style: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
           ),
         ),
-        title: const Text('Notification', style: _TextStyles.appBarTitle),
       ),
       body: ListView.separated(
         padding: EdgeInsets.zero,
         itemCount: items.length,
-        separatorBuilder: (_, __) => Container(height: 0.5, color: _Colors.divider),
+        separatorBuilder: (context, index) => Container(height: 0.5, color: _Colors.divider),
         itemBuilder: (context, i) => _NotificationTile(item: items[i]),
       ),
     );

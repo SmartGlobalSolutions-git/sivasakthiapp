@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:siva_sakthi/bottom_navbar.dart';
 import 'package:siva_sakthi/home/available_chit_screen.dart';
 import 'package:siva_sakthi/home/chit_schem_screen.dart';
 import 'package:siva_sakthi/home/menu.dart';
@@ -7,7 +8,12 @@ import 'package:siva_sakthi/home/notification.dart';
 import 'package:siva_sakthi/setting/about_us.dart';
 import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
-import 'package:siva_sakthi/my_chit/my_chits_screen.dart';
+import 'package:siva_sakthi/my_chit/my_chits_screen.dart' hide ChitItem;
+import 'package:siva_sakthi/payment/payment_review.dart';
+import 'package:siva_sakthi/payment/enter_payment.dart';
+import 'package:siva_sakthi/payment/payment_model.dart';
+import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
+import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
 
 // ==========================================================
 // SIVA SAKTHI CHIT FUNDS - HOME SCREEN
@@ -128,9 +134,13 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                 ),
               ),
             ),
-            _buildBottomNav(w, h),
           ],
         ),
+      ),
+      bottomNavigationBar: MainIconeFrames(
+        currentIndex: 0,
+        onTabSelected: (index) =>
+            MainIconeFrames.navigateToTab(context, 0, index),
       ),
     );
   }
@@ -152,9 +162,8 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
             'Hello Akhil',
             style: TextStyle(
               color: kBlack,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              height: 1.0,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const Spacer(),
@@ -162,9 +171,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const NeedHelpScreen(),
-                ),
+                MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
               );
             },
             child: Container(
@@ -235,7 +242,10 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   }
 
   Widget _bannerCard(
-      double Function(double) w, double Function(double) h, String imagePath) {
+    double Function(double) w,
+    double Function(double) h,
+    String imagePath,
+  ) {
     return GestureDetector(
       onTap: () {
         // Navigate to Plan Screen
@@ -276,14 +286,17 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
 
   // ---------------- 3 quick-action gradient cards ----------------
   Widget _buildQuickActionCards(
-      double Function(double) w, double Function(double) h) {
+    double Function(double) w,
+    double Function(double) h,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: w(16)),
       child: Row(
         children: [
           Expanded(
             child: _quickActionCard(
-              w, h,
+              w,
+              h,
               icon: Icons.map_outlined,
               title: 'My Chit',
               subtitle: 'Chit Overview',
@@ -301,8 +314,9 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           SizedBox(width: w(8)),
           Expanded(
             child: _quickActionCard(
-              w, h,
-              icon: Icons.calendar_month_outlined,
+              w,
+              h,
+              icon: Icons.calendar_today,
               title: 'Available Chits',
               subtitle: 'View available chit plans',
               endColor: kYellowEnd,
@@ -319,7 +333,8 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           SizedBox(width: w(8)),
           Expanded(
             child: _quickActionCard(
-              w, h,
+              w,
+              h,
               icon: Icons.groups_outlined,
               title: 'Chit Scheme',
               subtitle: 'Explore available chit plans',
@@ -340,14 +355,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   }
 
   Widget _quickActionCard(
-      double Function(double) w,
-      double Function(double) h, {
-        required IconData icon,
-        required String title,
-        required String subtitle,
-        required Color endColor,
-        VoidCallback? onTap,
-      }) {
+    double Function(double) w,
+    double Function(double) h, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color endColor,
+    VoidCallback? onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -368,17 +383,20 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  width: w(20),
-                  height: w(20),
+                  width: w(25),
+                  height: w(25),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFDFDFDF), width: 0.2),
+                    border: Border.all(
+                      color: const Color(0xFFDFDFDF),
+                      width: 0.2,
+                    ),
                   ),
                   alignment: Alignment.center,
-                  child: Icon(icon, size: w(11), color: kBlack),
+                  child: Icon(icon, size: w(18), color: kBlue),
                 ),
-                Icon(Icons.chevron_right, size: w(14), color: kBlack),
+                Icon(Icons.chevron_right, size: w(18), color: kBlack),
               ],
             ),
             SizedBox(height: h(10)),
@@ -387,7 +405,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               style: TextStyle(
                 color: kBlack,
                 fontSize: w(11),
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w500,
               ),
             ),
             SizedBox(height: h(2)),
@@ -397,7 +415,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: kBlack.withOpacity(0.6),
-                fontSize: w(7),
+                fontSize: w(10),
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -409,7 +427,9 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
 
   // ---------------- Payment Due card ----------------
   Widget _buildPaymentDueCard(
-      double Function(double) w, double Function(double) h) {
+    double Function(double) w,
+    double Function(double) h,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: w(16)),
       child: Container(
@@ -492,7 +512,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReviewPayScreen(),
+                      ),
+                    );
+                  },
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -570,12 +597,38 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                   ),
                   const Spacer(),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EnterPaymentAmountScreen(
+                            chits: [
+                              ChitItem(
+                                chitId: '12345',
+                                name: 'Akhil',
+                                groupDetail: '10-L',
+                                role: 'Customer',
+                                chitValue: '10,00,000',
+                                dateRange: '25 May 2025',
+                                runningBalance: '5,00,000',
+                                acNo: '10108011866',
+                                upiId: '10108011866@ubicaps',
+                                status: 'Running',
+                                chitAmount: 100000,
+                                dueAmount: 5000,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: kRed,
                       elevation: 0,
                       padding: EdgeInsets.symmetric(
-                          horizontal: w(18), vertical: h(10)),
+                        horizontal: w(18),
+                        vertical: h(10),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(w(20)),
                       ),
@@ -597,9 +650,12 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       ),
     );
   }
+
   // ---------------- Payment Assistance card ----------------
   Widget _buildPaymentAssistanceCard(
-      double Function(double) w, double Function(double) h) {
+    double Function(double) w,
+    double Function(double) h,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: w(16)),
       child: Container(
@@ -649,11 +705,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
             ),
             SizedBox(width: w(10)),
             ElevatedButton(
-              onPressed: () {},
+              onPressed: () => _showNeedHelpBottomSheet(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: kBlue,
                 elevation: 0,
-                padding: EdgeInsets.symmetric(horizontal: w(20), vertical: h(9)),
+                padding: EdgeInsets.symmetric(
+                  horizontal: w(20),
+                  vertical: h(9),
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(w(20)),
                 ),
@@ -673,9 +732,237 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
     );
   }
 
+  // ---------------- Need Help Bottom Sheet (Figma Design) ----------------
+  void _showNeedHelpBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle bar
+              Center(
+                child: Container(
+                  width: 38,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Header title and close icon
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Need help?',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 20,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                "We're here to assist with your chit plans & queries.",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Card 1: General Enquiry
+              _buildHelpCard(
+                icon: Icons.call_outlined,
+                title: 'General Enquiry',
+                subtitle: 'Account, group & plan queries',
+                badgeText: '9 AM - 6 PM',
+                badgeBgColor: const Color(0xFFDCFCE7),
+                badgeTextColor: const Color(0xFF15803D),
+                phoneText: '+91 90 4783 4783',
+                onCallTap: () {},
+              ),
+              const SizedBox(height: 14),
+              // Card 2: Collection Support
+              _buildHelpCard(
+                icon: Icons.headset_mic_outlined,
+                title: 'Collection Support',
+                subtitle: 'Payment, dues & settlement',
+                badgeText: 'Priority',
+                badgeBgColor: const Color(0xFFF1F5F9),
+                badgeTextColor: const Color(0xFF64748B),
+                phoneText: '+91 98 4329 9444',
+                onCallTap: () {},
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHelpCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String badgeText,
+    required Color badgeBgColor,
+    required Color badgeTextColor,
+    required String phoneText,
+    required VoidCallback onCallTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: const Color(0xFF334155), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeBgColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: badgeTextColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                phoneText,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: onCallTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kBlue,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Call',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 15,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   // ---------------- Let's Plan Your Growth ----------------
   Widget _buildPlanYourGrowth(
-      double Function(double) w, double Function(double) h) {
+    double Function(double) w,
+    double Function(double) h,
+  ) {
     return Container(
       width: double.infinity,
       color: kBlue,
@@ -686,11 +973,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Let's Plan Your Growth",
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: w(18),
-                      fontWeight: FontWeight.w700)),
+              Text(
+                "Let's Plan Your Growth",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: w(18),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
               Icon(Icons.smart_toy_outlined, color: Colors.white, size: w(28)),
             ],
           ),
@@ -715,42 +1005,75 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Investment Amount ₹',
-                    style: TextStyle(
-                        color: kBlue, fontSize: w(13), fontWeight: FontWeight.w500)),
+                Text(
+                  'Investment Amount ₹',
+                  style: TextStyle(
+                    color: kBlue,
+                    fontSize: w(13),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 SizedBox(height: h(6)),
                 _textField(w, h, _investmentCtrl, 'ex: 1,00,000'),
                 SizedBox(height: h(4)),
-                Text('Enter values in multiples of Lakhs (min-1 Lakh to max-1 Crore)',
-                    style: TextStyle(color: kBlack.withOpacity(0.6), fontSize: w(10))),
-                SizedBox(height: h(10)),
-                Center(
-                  child: Text('or',
-                      style: TextStyle(
-                          color: kBlack.withOpacity(0.6),
-                          fontSize: w(12),
-                          fontWeight: FontWeight.w500)),
+                Text(
+                  'Enter values in multiples of Lakhs (min-1 Lakh to max-1 Crore)',
+                  style: TextStyle(
+                    color: kBlack.withOpacity(0.6),
+                    fontSize: w(10),
+                  ),
                 ),
                 SizedBox(height: h(10)),
-                Text('EMI Amount ₹',
+                Center(
+                  child: Text(
+                    'or',
                     style: TextStyle(
-                        color: kBlue, fontSize: w(13), fontWeight: FontWeight.w500)),
+                      color: kBlack.withOpacity(0.6),
+                      fontSize: w(12),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                SizedBox(height: h(10)),
+                Text(
+                  'EMI Amount ₹',
+                  style: TextStyle(
+                    color: kBlue,
+                    fontSize: w(13),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 SizedBox(height: h(6)),
                 _textField(w, h, _emiCtrl, 'ex: 1,00,000'),
                 SizedBox(height: h(4)),
-                Text('Enter values in multiples of 5000 (min-5000 to max-5Lakhs)',
-                    style: TextStyle(color: kBlack.withOpacity(0.6), fontSize: w(10))),
+                Text(
+                  'Enter values in multiples of 5000 (min-5000 to max-5Lakhs)',
+                  style: TextStyle(
+                    color: kBlack.withOpacity(0.6),
+                    fontSize: w(10),
+                  ),
+                ),
                 SizedBox(height: h(16)),
                 Row(
                   children: [
                     Expanded(
-                      child: _dropdownField(w, h, 'No Of EMI\'s', _noOfEmis,
-                              (v) => setState(() => _noOfEmis = v)),
+                      child: _dropdownField(
+                        w,
+                        h,
+                        'No Of EMI\'s',
+                        _noOfEmis,
+                        (v) => setState(() => _noOfEmis = v),
+                      ),
                     ),
                     SizedBox(width: w(12)),
                     Expanded(
-                      child: _dropdownField(w, h, 'No Of Chit Members', _noOfMembers,
-                              (v) => setState(() => _noOfMembers = v)),
+                      child: _dropdownField(
+                        w,
+                        h,
+                        'No Of Chit Members',
+                        _noOfMembers,
+                        (v) => setState(() => _noOfMembers = v),
+                      ),
                     ),
                   ],
                 ),
@@ -762,27 +1085,57 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                       child: Text(
                         'Note:\nEnter Values In Multiples Of\nLakhs In Investment',
                         style: TextStyle(
-                            color: kBlack.withOpacity(0.6),
-                            fontSize: w(10),
-                            height: 1.4),
+                          color: kBlack.withOpacity(0.6),
+                          fontSize: w(10),
+                          height: 1.4,
+                        ),
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        final invText = _investmentCtrl.text.trim();
+                        final emiText = _emiCtrl.text.trim();
+
+                        if (invText.isEmpty && emiText.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Please enter Investment Amount or EMI Amount'),
+                              backgroundColor: Colors.black,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SubscriptionPlanScreen(
+                              investmentAmount: invText.isNotEmpty ? invText : emiText,
+                              durationMonths: _noOfEmis.toString(),
+                            ),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kBlue,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(
-                            horizontal: w(28), vertical: h(13)),
+                          horizontal: w(28),
+                          vertical: h(13),
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(w(24)),
                         ),
                       ),
-                      child: Text('Submit',
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: w(14),
-                              fontWeight: FontWeight.w700)),
+                      child: Text(
+                        'Submit',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: w(14),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -795,7 +1148,10 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   }
 
   Widget _planRadio(
-      double Function(double) w, double Function(double) h, String label) {
+    double Function(double) w,
+    double Function(double) h,
+    String label,
+  ) {
     final bool selected = _selectedPlan == label;
     return GestureDetector(
       onTap: () => setState(() => _selectedPlan = label),
@@ -814,26 +1170,35 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
             alignment: Alignment.center,
             child: selected
                 ? Container(
-              width: w(8),
-              height: w(8),
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: kBlue,
-              ),
-            )
+                    width: w(8),
+                    height: w(8),
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: kBlue,
+                    ),
+                  )
                 : null,
           ),
           SizedBox(width: w(8)),
-          Text(label,
-              style: TextStyle(
-                  color: Colors.white, fontSize: w(13), fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: w(13),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _textField(double Function(double) w, double Function(double) h,
-      TextEditingController controller, String hint) {
+  Widget _textField(
+    double Function(double) w,
+    double Function(double) h,
+    TextEditingController controller,
+    String hint,
+  ) {
     return TextField(
       controller: controller,
       keyboardType: TextInputType.number,
@@ -841,7 +1206,10 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: kBlack.withOpacity(0.35), fontSize: w(14)),
-        contentPadding: EdgeInsets.symmetric(horizontal: w(14), vertical: h(12)),
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: w(14),
+          vertical: h(12),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(w(10)),
           borderSide: const BorderSide(color: kDivider),
@@ -859,18 +1227,23 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   }
 
   Widget _dropdownField(
-      double Function(double) w,
-      double Function(double) h,
-      String label,
-      int value,
-      ValueChanged<int> onChanged,
-      ) {
+    double Function(double) w,
+    double Function(double) h,
+    String label,
+    int value,
+    ValueChanged<int> onChanged,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label,
-            style: TextStyle(
-                color: kBlue, fontSize: w(12), fontWeight: FontWeight.w500)),
+        Text(
+          label,
+          style: TextStyle(
+            color: kBlue,
+            fontSize: w(12),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         SizedBox(height: h(6)),
         Container(
           padding: EdgeInsets.symmetric(horizontal: w(12)),
@@ -880,6 +1253,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<int>(
+              dropdownColor: Colors.white,
               value: value,
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down, color: kBlack),
@@ -899,20 +1273,42 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
 
   // ---------------- Explore section ----------------
   Widget _buildExploreSection(
-      double Function(double) w, double Function(double) h) {
+    double Function(double) w,
+    double Function(double) h,
+  ) {
     final plans = [
-      {'value': '10,00,000', 'sub': '16,000', 'slots': '14 slots left', 'popular': true},
-      {'value': '50,000', 'sub': '700', 'slots': '15 slots left', 'popular': false},
-      {'value': '5,00,000', 'sub': '8,500', 'slots': '9 slots left', 'popular': false},
+      {
+        'value': '10,00,000',
+        'sub': '16,000',
+        'slots': '14 slots left',
+        'popular': true,
+      },
+      {
+        'value': '50,000',
+        'sub': '700',
+        'slots': '15 slots left',
+        'popular': false,
+      },
+      {
+        'value': '5,00,000',
+        'sub': '8,500',
+        'slots': '9 slots left',
+        'popular': false,
+      },
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: EdgeInsets.symmetric(horizontal: w(16)),
-          child: Text('Explore',
-              style: TextStyle(
-                  color: kBlack, fontSize: w(18), fontWeight: FontWeight.w600)),
+          child: Text(
+            'Explore',
+            style: TextStyle(
+              color: kBlack,
+              fontSize: w(18),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ),
         SizedBox(height: h(12)),
         SizedBox(
@@ -973,7 +1369,9 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                             ),
                             child: Container(
                               padding: EdgeInsets.symmetric(
-                                  horizontal: w(8), vertical: h(3)),
+                                horizontal: w(8),
+                                vertical: h(3),
+                              ),
                               child: Text(
                                 'Popular',
                                 style: TextStyle(
@@ -1029,7 +1427,9 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                       width: double.infinity,
                       height: h(38),
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          showChitEnquiryDialog(context);
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: kBlue,
                           elevation: 0,
@@ -1060,15 +1460,22 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
 
   // ---------------- Quick Links ----------------
   Widget _buildQuickLinks(
-      double Function(double) w, double Function(double) h) {
+    double Function(double) w,
+    double Function(double) h,
+  ) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: w(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Quick Links',
-              style: TextStyle(
-                  color: kBlack, fontSize: w(18), fontWeight: FontWeight.w600)),
+          Text(
+            'Quick Links',
+            style: TextStyle(
+              color: kBlack,
+              fontSize: w(18),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           SizedBox(height: h(14)),
           _quickLinkTile(
             w,
@@ -1105,14 +1512,14 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   }
 
   Widget _quickLinkTile(
-      double Function(double) w,
-      double Function(double) h, {
-      required String iconAsset,
-      required IconData fallbackIcon,
-      required String title,
-      required String subtitle,
-      required VoidCallback onTap,
-      }) {
+    double Function(double) w,
+    double Function(double) h, {
+    required String iconAsset,
+    required IconData fallbackIcon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1179,40 +1586,6 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  // ---------------- Bottom nav ----------------
-  Widget _buildBottomNav(
-      double Function(double) w, double Function(double) h) {
-    return Container(
-      height: h(58),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: kDivider, width: 0.6)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _navItem(w, h, Icons.home_outlined, 'Home', true),
-          _navItem(w, h, Icons.calendar_month_outlined, 'Schemes', false),
-          _navItem(w, h, Icons.payments_outlined, 'Payments', false),
-          _navItem(w, h, Icons.credit_card_outlined, 'Profile', false),
-        ],
-      ),
-    );
-  }
-
-  Widget _navItem(double Function(double) w, double Function(double) h,
-      IconData icon, String label, bool active) {
-    final color = active ? kBlue : kBlack.withOpacity(0.45);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: color, size: w(22)),
-        SizedBox(height: h(2)),
-        Text(label, style: TextStyle(color: color, fontSize: w(10))),
-      ],
     );
   }
 }

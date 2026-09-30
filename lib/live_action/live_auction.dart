@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:siva_sakthi/bottom_navbar.dart';
 import 'live_bids.dart';
 
 class LiveAuctionScreen extends StatefulWidget {
@@ -10,9 +11,6 @@ class LiveAuctionScreen extends StatefulWidget {
 }
 
 class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
-  int _selectedIndex =
-      2; 
-
   final List<AuctionItem> _auctionItems = [
     AuctionItem(
       roomTitle: 'Live Auction Room',
@@ -69,7 +67,10 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
           return _buildAuctionCard(item);
         },
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: MainIconeFrames(
+        currentIndex: 2,
+        onTabSelected: (index) => MainIconeFrames.navigateToTab(context, 2, index),
+      ),
     );
   }
 
@@ -292,106 +293,6 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFEEF0F3), width: 1)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 62,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              // 1. Home
-              _buildBottomNavItem(
-                iconPath: 'assets/liveauction/Frame 1171279063.png',
-                index: 0,
-                label: null,
-              ),
-
-              // 2. Documents
-              _buildBottomNavItem(
-                iconPath: 'assets/liveauction/Frame 1171279070.png',
-                index: 1,
-                label: null,
-              ),
-
-              // 3. Live Auction (Active)
-              _buildBottomNavItem(
-                iconPath: 'assets/liveauction/Group 1000005040.png',
-                index: 2,
-                label: 'Live auction',
-                labelColor: const Color(0xFF2563EB),
-                isCustomActive: true,
-              ),
-
-              // 4. Wallet / Cards
-              _buildBottomNavItem(
-                iconPath: 'assets/liveauction/Frame 1171279073.png',
-                index: 3,
-                label: null,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavItem({
-    required String iconPath,
-    required int index,
-    String? label,
-    Color? labelColor,
-    bool isCustomActive = false,
-  }) {
-    final bool isSelected = _selectedIndex == index;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              iconPath,
-              width: 24,
-              height: 24,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.circle, size: 20),
-            ),
-            if (label != null) ...[
-              const SizedBox(height: 3),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color:
-                      labelColor ??
-                      (isSelected
-                          ? const Color(0xFF2563EB)
-                          : const Color(0xFF6B7280)),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }

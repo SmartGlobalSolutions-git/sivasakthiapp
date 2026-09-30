@@ -28,7 +28,7 @@ class ChitItem {
   });
 
   // Figma: Due 20,000 -> default 10,000 | Due 30,000 -> default 15,000
-  int get defaultPayAmount => dueAmount ~/ 2;
+  int get defaultPayAmount => dueAmount <= 5000 ? dueAmount : dueAmount ~/ 2;
 }
 
 class ChitPayItem {

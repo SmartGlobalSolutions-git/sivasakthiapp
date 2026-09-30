@@ -1,32 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ---- Figma tokens (Need Help?) ----
 class _Colors {
   static const Color pageBg = Color(0xFFF2F3F5);
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color black80 = Color(0xCC000000); // search icon, #000000 @ 80%
-  static const Color black60 = Color(0x99000000); // "Chat to ... 24/7", @ 60%
-  static const Color black50 = Color(0x80000000); // subtitle, @ 50%
-  static const Color green = Color(0xFF058334); // Chat button + icons
-  static const Color searchBorder = Color(0x69000000); // @ 41%, 1px
-  static const Color cardBorder = Color(0x1A000000); // @ 10%, 0.5px
-  static const Color iconBorder = Color(0x24000000); // @ 14%, 1px
-  static const Color shadow = Color(0x40000000); // @ 25%, y2 blur4
-  static const Color divider = Color(0x63000000); // @ 39%, 0.2px
+  static const Color black80 = Color(0xCC000000); 
+  static const Color black60 = Color(0x99000000); 
+  static const Color black50 = Color(0x80000000);
+  static const Color green = Color(0xFF058334); 
+  static const Color searchBorder = Color(0x69000000); 
+  static const Color cardBorder = Color(0x1A000000);
+  static const Color iconBorder = Color(0x24000000); 
+  static const Color shadow = Color(0x40000000); 
+  static const Color divider = Color(0x63000000); 
   static const Color chevron = Color(0xFF9E9E9E);
   static const Color hint = Color(0xFF9E9E9E);
 }
 
 class _TextStyles {
-  static const TextStyle headerTitle = TextStyle(
-    fontFamily: 'Inter',
-    fontSize: 16,
-    fontWeight: FontWeight.w400,
-    color: _Colors.black,
-  );
-
-  // "Hi Akhil, How can we help ?" — Inter 600, 24px
   static const TextStyle greeting = TextStyle(
     fontFamily: 'Inter',
     fontSize: 24,
@@ -35,7 +28,6 @@ class _TextStyles {
     height: 1.2,
   );
 
-  // "Search a topic or find your query in the FAQs" — Inter 500, 14px, 50%
   static const TextStyle subtitle = TextStyle(
     fontFamily: 'Inter',
     fontSize: 14,
@@ -43,7 +35,6 @@ class _TextStyles {
     color: _Colors.black50,
   );
 
-  // "Chat to Akhil 24/7 or one of our team" — Inter 500, 13px, 60%
   static const TextStyle chatCaption = TextStyle(
     fontFamily: 'Inter',
     fontSize: 13,
@@ -88,11 +79,34 @@ class NeedHelpScreen extends StatelessWidget {
   /// Shown in the greeting and the "Chat to ... 24/7" caption.
   final String userName;
 
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      centerTitle: false,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: Text(
+        'Need Help?',
+        style: GoogleFonts.manrope(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _Colors.pageBg,
-      appBar: const _Header(title: 'Need Help?'),
+      appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
         child: Column(
@@ -328,38 +342,4 @@ class _ContactRow extends StatelessWidget {
       ),
     );
   }
-}
-
-// 57px header, white bg, back arrow + title — sits below the status bar
-class _Header extends StatelessWidget implements PreferredSizeWidget {
-  const _Header({required this.title});
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: _Colors.white,
-      child: SafeArea(
-        bottom: false,
-        child: SizedBox(
-          height: 57,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back, color: _Colors.black),
-                  onPressed: () => Navigator.of(context).maybePop(),
-                ),
-                Text(title, style: _TextStyles.headerTitle),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(57);
 }

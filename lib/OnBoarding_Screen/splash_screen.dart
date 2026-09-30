@@ -1,6 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'get_started_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,13 +35,10 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 2.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animController,
-      curve: Curves.easeOutCubic,
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0.0, 2.5), end: Offset.zero).animate(
+          CurvedAnimation(parent: _animController, curve: Curves.easeOutCubic),
+        );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _animController,
@@ -121,11 +120,11 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Image.asset(
                       'assets/images/logo.png',
                       width: 220,
-                      height: 220,
+                      height: 150,
                       fit: BoxFit.contain,
                       errorBuilder: (_, _, _) => const Icon(
                         Icons.account_balance,
-                        size: 100,
+                        size: 50,
                         color: Colors.white,
                       ),
                     ),

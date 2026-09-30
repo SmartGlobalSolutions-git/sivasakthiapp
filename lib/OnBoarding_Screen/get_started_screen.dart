@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import 'yes_no_login_screen.dart';
 import 'terms_condition_screen.dart';
 
-/// Get Started Screen: Welcome UI shown after splash animation
-/// Figma: Android Medium - 11
 class GetStartedScreen extends StatelessWidget {
   const GetStartedScreen({super.key});
 
@@ -37,8 +36,10 @@ class GetStartedScreen extends StatelessWidget {
                   final double baseW = 360.0;
                   final double baseH = 800.0;
                   final double scaleW = constraints.maxWidth / baseW;
-                  final double scaleH =
-                      (constraints.maxHeight / baseH).clamp(0.85, 1.25);
+                  final double scaleH = (constraints.maxHeight / baseH).clamp(
+                    0.85,
+                    1.25,
+                  );
 
                   return SingleChildScrollView(
                     physics: const ClampingScrollPhysics(),
@@ -53,8 +54,7 @@ class GetStartedScreen extends StatelessWidget {
                           // Family oval header image
                           Positioned(
                             top: -122 * scaleH,
-                            left:
-                                (constraints.maxWidth - (425 * scaleW)) / 2,
+                            left: (constraints.maxWidth - (425 * scaleW)) / 2,
                             width: 425 * scaleW,
                             height: 475 * scaleH,
                             child: Image.asset(
@@ -69,7 +69,7 @@ class GetStartedScreen extends StatelessWidget {
                                     end: Alignment.bottomCenter,
                                     colors: [
                                       Color(0xFF3C93F4),
-                                      Color(0xFF1B65B7)
+                                      Color(0xFF1B65B7),
                                     ],
                                   ),
                                 ),
@@ -130,7 +130,7 @@ class GetStartedScreen extends StatelessWidget {
                                     height: 1.45,
                                   ),
                                 ),
-                                SizedBox(height: 12 * scaleH),
+                                SizedBox(height: 10 * scaleH),
                                 Text(
                                   'With a customer-first approach and dedicated\nservice, we strive to build long-term\nrelationships based on trust, transparency, and\nreliability.',
                                   textAlign: TextAlign.center,
@@ -147,7 +147,7 @@ class GetStartedScreen extends StatelessWidget {
 
                           // Tagline
                           Positioned(
-                            top: 608 * scaleH,
+                            top: 601 * scaleH,
                             left: 16 * scaleW,
                             right: 16 * scaleW,
                             child: Text(
@@ -164,7 +164,7 @@ class GetStartedScreen extends StatelessWidget {
 
                           // Star Rating (4 full + 1 half)
                           Positioned(
-                            top: 634 * scaleH,
+                            top: 630 * scaleH,
                             left: 0,
                             right: 0,
                             child: Row(
@@ -173,24 +173,34 @@ class GetStartedScreen extends StatelessWidget {
                                 for (int i = 0; i < 4; i++)
                                   const Padding(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 2.0),
-                                    child: Icon(Icons.star_rounded,
-                                        color: Color(0xFFFFC400), size: 26),
+                                      horizontal: 2.0,
+                                    ),
+                                    child: Icon(
+                                      Icons.star_rounded,
+                                      color: Color(0xFFFFC400),
+                                      size: 26,
+                                    ),
                                   ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 2.0),
+                                    horizontal: 2.0,
+                                  ),
                                   child: Stack(
                                     children: [
-                                      const Icon(Icons.star_rounded,
-                                          color: Color(0xFFE0E0E0), size: 26),
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        color: Color(0xFFE0E0E0),
+                                        size: 26,
+                                      ),
                                       ClipRect(
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           widthFactor: 0.5,
-                                          child: const Icon(Icons.star_rounded,
-                                              color: Color(0xFFFFC400),
-                                              size: 26),
+                                          child: const Icon(
+                                            Icons.star_rounded,
+                                            color: Color(0xFFFFC400),
+                                            size: 26,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -202,20 +212,21 @@ class GetStartedScreen extends StatelessWidget {
 
                           // Get Started Button
                           Positioned(
-                            top: 698 * scaleH,
+                            top: 675 * scaleH,
                             left: 16,
                             right: 16,
                             child: SizedBox(
-                              height: 52,
+                              height: 50,
                               child: ElevatedButton(
                                 onPressed: () {
-                                  Navigator.of(context).push(PageRouteBuilder(
-                                    transitionDuration: Duration.zero,
-                                    reverseTransitionDuration: Duration.zero,
-                                    pageBuilder:
-                                        (context, animation, _) =>
-                                            const UserTypeSelectionScreen(),
-                                  ));
+                                  Navigator.of(context).push(
+                                    PageRouteBuilder(
+                                      transitionDuration: Duration.zero,
+                                      reverseTransitionDuration: Duration.zero,
+                                      pageBuilder: (context, animation, _) =>
+                                          const UserTypeSelectionScreen(),
+                                    ),
+                                  );
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF3C93F4),
@@ -239,7 +250,7 @@ class GetStartedScreen extends StatelessWidget {
 
                           // Footer Terms link
                           Positioned(
-                            top: 760 * scaleH,
+                            top: 750 * scaleH,
                             left: 16 * scaleW,
                             right: 16 * scaleW,
                             child: Column(
@@ -272,8 +283,7 @@ class GetStartedScreen extends StatelessWidget {
                                       fontWeight: FontWeight.w500,
                                       color: const Color(0xFF3C93F4),
                                       decoration: TextDecoration.underline,
-                                      decorationColor:
-                                          const Color(0xFF3C93F4),
+                                      decorationColor: const Color(0xFF3C93F4),
                                       height: 1.3,
                                     ),
                                   ),

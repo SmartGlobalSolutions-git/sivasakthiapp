@@ -1,376 +1,417 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:siva_sakthi/my_chit/chit_model.dart';
+import 'package:siva_sakthi/bottom_navbar.dart';
+import 'package:siva_sakthi/my_chit/chit_detail_screen.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/home/notification.dart';
-import 'chit_detail_screen.dart';
+
+enum ChitPrizeStatus { nonPrized, prized }
+
+class ChitItem {
+  final String name;
+  final String groupCode;
+  final String chitValue; 
+  final String startDate;
+  final String endDate;
+  final ChitPrizeStatus prizeStatus;
+  final String totalDividend;
+  final String runningBalance;
+  final int completedMonths;
+  final int totalMonths;
+
+  const ChitItem({
+    required this.name,
+    required this.groupCode,
+    required this.chitValue,
+    required this.startDate,
+    required this.endDate,
+    required this.prizeStatus,
+    required this.totalDividend,
+    required this.runningBalance,
+    required this.completedMonths,
+    required this.totalMonths,
+  });
+}
 
 class MyChitsScreen extends StatelessWidget {
-  const MyChitsScreen({super.key});
+  /// Set false if your app already has a bottom nav shell.
+  final bool showBottomNav;
 
-  final List<ChitData> _chits = const [
-    ChitData(
+  const MyChitsScreen({super.key, this.showBottomNav = true});
+
+  static const Color kBg = Color(0xFFF3F3F5);
+  static const Color kBlue = Color(0xFF3C93F4);
+  static const Color kLabel = Color(0xFF475569);
+  static const Color kNavy = Color(0xFF1E293B);
+
+  // Assets (PNG)
+  static const String kBack = 'assets/chits/ic_back.png';
+  static const String kHelp = 'assets/images/help_operator.png';
+  static const String kBell = 'assets/images/notification.png';
+  static const String kGroupBlue = 'assets/chits/ic_group_blue.png';
+  static const String kArrowRight = 'assets/chits/ic_arrow_right_blue.png';
+
+  // TODO: replace with API data
+  static const List<ChitItem> _chits = [
+    ChitItem(
       name: 'Chandru',
       groupCode: '10 - L',
-      isPrized: false,
       chitValue: '₹ 10,00,000',
       startDate: '01 Jan 2024',
       endDate: '31 Aug 2025',
+      prizeStatus: ChitPrizeStatus.nonPrized,
+      totalDividend: '₹ 1,00,000',
+      runningBalance: '₹ 5,00,000',
+      completedMonths: 6,
+      totalMonths: 20,
     ),
-    ChitData(
+    ChitItem(
       name: 'Chandru',
       groupCode: '10 - L',
-      isPrized: true,
       chitValue: '₹ 10,00,000',
       startDate: '01 Jan 2024',
       endDate: '31 Aug 2025',
+      prizeStatus: ChitPrizeStatus.prized,
+      totalDividend: '₹ 1,00,000',
+      runningBalance: '₹ 5,00,000',
+      completedMonths: 6,
+      totalMonths: 20,
     ),
-    ChitData(
+    ChitItem(
       name: 'Chandru',
       groupCode: '10 - L',
-      isPrized: false,
       chitValue: '₹ 10,00,000',
       startDate: '01 Jan 2024',
       endDate: '31 Aug 2025',
+      prizeStatus: ChitPrizeStatus.nonPrized,
+      totalDividend: '₹ 1,00,000',
+      runningBalance: '₹ 5,00,000',
+      completedMonths: 6,
+      totalMonths: 20,
     ),
-    ChitData(
+    ChitItem(
       name: 'Chandru',
       groupCode: '10 - L',
-      isPrized: false,
       chitValue: '₹ 10,00,000',
       startDate: '01 Jan 2024',
       endDate: '31 Aug 2025',
+      prizeStatus: ChitPrizeStatus.nonPrized,
+      totalDividend: '₹ 1,00,000',
+      runningBalance: '₹ 5,00,000',
+      completedMonths: 6,
+      totalMonths: 20,
     ),
   ];
+
+  // ---------------- helpers ----------------
+  TextStyle _t(double size, FontWeight w, Color c,
+      {double? height, double? spacing}) =>
+      GoogleFonts.inter(
+        fontSize: size,
+        fontWeight: w,
+        color: c,
+        height: height ?? 1.0,
+        letterSpacing: spacing,
+      );
+
+  /// PNG icon with Material fallback (so app doesn't crash before assets are added)
+  Widget _icon(String asset, double size, IconData fallback, {Color? color}) {
+    return Image.asset(
+      asset,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+      errorBuilder: (c, e, s) => Icon(fallback, size: size, color: color ?? Colors.black87),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      backgroundColor: kBg,
+      appBar: _buildAppBar(context),
+      body: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 11, 16, 24),
+        itemCount: _chits.length,
+        separatorBuilder: (_, __) => const SizedBox(height: 18),
+        itemBuilder: (context, i) => _buildCard(context, _chits[i]),
+      ),
+      bottomNavigationBar: MainIconeFrames(
+        currentIndex: 1,
+        onTabSelected: (index) => MainIconeFrames.navigateToTab(context, 1, index),
+      ),
+    );
+  }
+
+  // ---------------- App bar ----------------
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: const Color(0xFFF4F5F7),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      centerTitle: false,
+      titleSpacing: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF1E2638), size: 22),
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: Text(
+        'My Chits',
+        style: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: const Color(0xFF1E2638),
+        ),
+      ),
+      actions: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFD0D5DD), width: 0.8),
+            ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Back button (arrow)
-                GestureDetector(
-                  onTap: () {
-                    // Back action
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: Color(0xFF000000),
-                      size: 24,
-                    ),
-                  ),
+                Image.asset(
+                  'assets/images/help_operator.png',
+                  width: 14,
+                  height: 14,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.headset_mic, size: 14, color: Color(0xFF3C93F4)),
                 ),
-                // Title "My Chits" - Inter 16px, Weight 600, Color #000000
+                const SizedBox(width: 4),
                 Text(
-                  'My Chits',
+                  'Need Help ?',
                   style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF000000),
-                  ),
-                ),
-                const Spacer(),
-                // "Need Help ?" button - Blue
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NeedHelpScreen(),
-                      ),
-                    );
-                  },
-                  child: Image.asset(
-                    'assets/chit/Group 146124.png',
-                    height: 33,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                // Notification Icon
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const NotificationScreen(),
-                      ),
-                    );
-                  },
-                  child: Image.asset(
-                    'assets/chit/notification-svgrepo-com (1) 1.png',
-                    width: 22,
-                    height: 22,
-                    fit: BoxFit.contain,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF3C93F4),
                   ),
                 ),
               ],
             ),
           ),
         ),
+        const SizedBox(width: 4),
+        IconButton(
+          icon: Image.asset(
+            'assets/images/notification.png',
+            width: 20,
+            height: 20,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.notifications_none, color: Color(0xFF1E2638)),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NotificationScreen()),
+            );
+          },
+        ),
+        const SizedBox(width: 6),
+      ],
+    );
+  }
+
+  // Status pill: hug x 26, radius 9999, border 1, padding 4/10, gap 6
+  Widget _badge(String label, Color bg, Color border, Color fg) {
+    return Container(
+      height: 26,
+      padding: const EdgeInsets.symmetric(horizontal: 9),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(9999),
+        border: Border.all(color: border, width: 1),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.only(top: 14, bottom: 20),
-        itemCount: _chits.length,
-        itemBuilder: (context, index) {
-          final chit = _chits[index];
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ChitCardWidget(
-              chit: chit,
-              onViewDetail: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChitDetailScreen(chit: chit),
-                  ),
-                );
-              },
-            ),
-          );
-        },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: fg, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: _t(13, FontWeight.w600, fg)),
+        ],
       ),
     );
   }
-}
 
-class ChitCardWidget extends StatelessWidget {
-  final ChitData chit;
-  final VoidCallback onViewDetail;
-
-  const ChitCardWidget({
-    super.key,
-    required this.chit,
-    required this.onViewDetail,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  // Figma: Chit card 328 x 143, radius 8, border 0.6 #3C93F4, white,
+  // shadow x0 y4 blur4 #000 25%
+  Widget _buildCard(BuildContext context, ChitItem c) {
+    final prized = c.prizeStatus == ChitPrizeStatus.prized;
     return Container(
       height: 143,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: const Color(0xFF3C93F4),
-          width: 0.6,
-        ),
+        border: Border.all(color: kBlue, width: 0.6),
         boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            offset: Offset(0, 4),
-            blurRadius: 4,
-            spreadRadius: 0,
+          BoxShadow(color: Color(0x40000000), offset: Offset(0, 4), blurRadius: 4),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Avatar block 63 x 54, #3C93F4 @20%
+          Positioned(
+            left: 0,
+            top: 1,
+            width: 63,
+            height: 54,
+            child: Container(
+              color: const Color(0x333C93F4),
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 7,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: Container(
+                        width: 26,
+                        height: 26,
+                        alignment: Alignment.center,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: _icon(kGroupBlue, 16, Icons.groups, color: kBlue),
+                      ),
+                    ),
+                  ),
+                  // Active pill 45 x 12, radius 12, #3C93F4
+                  Positioned(
+                    top: 37,
+                    left: 9,
+                    width: 45,
+                    height: 12,
+                    child: Container(
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: kBlue,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text('Active',
+                          style: _t(9.5, FontWeight.w500, Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // header divider
+          const Positioned(
+            left: 0,
+            right: 0,
+            top: 54,
+            height: 1,
+            child: ColoredBox(color: Color(0xFFE5E7EB)),
+          ),
+          // Name + group code
+          Positioned(
+            left: 71,
+            top: 11,
+            child: Text(c.name,
+                style: _t(12, FontWeight.w500, Colors.black, spacing: -0.5)),
+          ),
+          Positioned(
+            left: 71,
+            top: 25,
+            child: Row(
+              children: [
+                Text('GROUP CODE',
+                    style: _t(11, FontWeight.w500, kLabel, spacing: 0.55)),
+                const SizedBox(width: 6),
+                Text(c.groupCode, style: _t(16, FontWeight.w700, kNavy)),
+              ],
+            ),
+          ),
+          // Prize badge
+          Positioned(
+            right: 7,
+            top: 8,
+            child: prized
+                ? _badge('Prized', const Color(0xFFDDE3FF),
+                const Color(0xFF2D3A8C), const Color(0xFF1E2A78))
+                : _badge('Non-prized', const Color(0xFFFFFAE6),
+                const Color(0xFFD9AB07), const Color(0xFFD9AB07)),
+          ),
+          // Chit Value / Start Date / End Date
+          Positioned(
+            left: 14,
+            right: 12,
+            top: 63,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 119,
+                  child: _gridCol(
+                    'Chit Value',
+                    c.chitValue,
+                    _t(14, FontWeight.w700, const Color(0xFF2545C4), height: 20 / 14),
+                    2.5,
+                  ),
+                ),
+                SizedBox(
+                  width: 108,
+                  child: _gridCol('Start Date', c.startDate, _dateStyle, 4.5),
+                ),
+                Expanded(child: _gridCol('End Date', c.endDate, _dateStyle, 4.5)),
+              ],
+            ),
+          ),
+          // View Detail ->
+          Positioned(
+            right: 12,
+            top: 118,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ChitsDetailScreen(chit: c)),
+              ),
+              child: Row(
+                children: [
+                  Text('View Detail', style: _t(12, FontWeight.w400, kBlue)),
+                  const SizedBox(width: 4),
+                  _icon(kArrowRight, 14, Icons.arrow_forward, color: kBlue),
+                ],
+              ),
+            ),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(7.4),
-        child: Stack(
-          children: [
-            // 1. Top Left: Active Badge Asset - exact size 63x54
-            Positioned(
-              top: 0,
-              left: 0,
-              width: 63,
-              height: 54,
-              child: Image.asset(
-                'assets/chit/Group 1000004910.png',
-                width: 63,
-                height: 54,
-                fit: BoxFit.fill,
-              ),
-            ),
-
-            // Top Middle: Chandru & GROUP CODE 10 - L
-            Positioned(
-              top: 0,
-              left: 75,
-              right: 120,
-              height: 54,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    chit.name,
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E293B),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    children: [
-                      Text(
-                        'GROUP CODE  ',
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF64748B),
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      Text(
-                        chit.groupCode,
-                        style: GoogleFonts.inter(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: const Color(0xFF0F172A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Top Right: Status Badge (Non-prized or Prized)
-            Positioned(
-              top: 14,
-              right: 12,
-              child: Image.asset(
-                chit.isPrized
-                    ? 'assets/chit/Status Badge (1).png'
-                    : 'assets/chit/Status Badge.png',
-                height: 26,
-                fit: BoxFit.contain,
-              ),
-            ),
-
-            // 2. Horizontal Divider: Height 1px, Top 54px, Color #F1F5F9
-            Positioned(
-              top: 54,
-              left: 0,
-              right: 0,
-              height: 1,
-              child: Container(
-                color: const Color(0xFFF1F5F9),
-              ),
-            ),
-
-            // 3. Chit Value & Dates Grid
-            Positioned(
-              top: 63,
-              left: 14,
-              right: 14,
-              height: 39,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Column 1: Chit Value
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Chit Value',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF64748B),
-                            height: 1.0,
-                          ),
-                        ),
-                        Text(
-                          chit.chitValue,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: const Color(0xFF1D61D2),
-                            height: 1.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Column 2: Start Date
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Start Date',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF64748B),
-                            height: 1.0,
-                          ),
-                        ),
-                        Text(
-                          chit.startDate,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                            height: 1.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Column 3: End Date
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'End Date',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF64748B),
-                            height: 1.0,
-                          ),
-                        ),
-                        Text(
-                          chit.endDate,
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E293B),
-                            height: 1.0,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // 4. View Detail -> button
-            Positioned(
-              right: 14,
-              bottom: 10,
-              child: GestureDetector(
-                onTap: onViewDetail,
-                child: Image.asset(
-                  'assets/chit/Group 1000004834.png',
-                  height: 15,
-                  fit: BoxFit.contain,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
+
+  TextStyle get _dateStyle => _t(10, FontWeight.w600, kNavy, height: 14 / 10);
+
+  Widget _gridCol(String label, String value, TextStyle valueStyle, double gap) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: _t(11, FontWeight.w500, kLabel, height: 16.5 / 11)),
+        SizedBox(height: gap),
+        Text(value, style: valueStyle),
+      ],
+    );
+  }
+
 }

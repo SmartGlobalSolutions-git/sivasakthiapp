@@ -7,18 +7,18 @@ import 'chit_model.dart';
 
 class PassbookEntry {
   final String slNo;
-  final String chitDate;
+  final String auctionDate;
   final String discountDiv;
-  final String divident;
+  final String dividend;
   final String paidDate;
   final String installment;
   final String receiptNo;
 
   const PassbookEntry({
     required this.slNo,
-    required this.chitDate,
+    required this.auctionDate,
     required this.discountDiv,
-    required this.divident,
+    required this.dividend,
     required this.paidDate,
     required this.installment,
     required this.receiptNo,
@@ -35,19 +35,53 @@ class PassbookScreen extends StatefulWidget {
 }
 
 class _PassbookScreenState extends State<PassbookScreen> {
+  static const Color kBg = Color(0xFFF3F3F5);
+  static const Color kGold = Color(0xFF3C93F4);
+  static const Color kHeaderBlue = Color(0xFF193FBD);
+  static const Color kHeaderDivider = Color(0xFF3C93F4);
+  static const Color kValueText = Color(0xFF111827);
+  static const Color kDivider = Color(0xFFE5E7EB);
+  static const Color kStripe = Color(0x80E5E5E5); // #E5E5E5 @ 50%
+  static const double _borderWidth = 0.84;
+
+  static const List<String> _labels = [
+    'RECEIPT NO.',
+    'INSTALLMENT (₹)',
+    'PAID DATE',
+    'DIVIDENT',
+    'DISCOUNT / DIV.',
+    'AUCTION DATE',
+    'SL. NO.',
+  ];
+  static const List<double> _rowHeights = [90, 120, 93, 62, 114, 103, 55];
+
+  // Figma: INSTALLMENT and SL. NO. rows are bold (700), others regular
+  static const List<FontWeight> _rowWeights = [
+    FontWeight.w400,
+    FontWeight.w700,
+    FontWeight.w400,
+    FontWeight.w400,
+    FontWeight.w400,
+    FontWeight.w400,
+    FontWeight.w700,
+  ];
+
+  static const double _labelColWidth = 37.47;
+  static const double _dataColWidth = 35.8;
+
   bool _isDownloading = false;
   bool _isSharing = false;
 
   final List<PassbookEntry> _entries = const [
-    PassbookEntry(slNo: '01', chitDate: '10-Nov-2023', discountDiv: '₹ -', divident: '₹ -', paidDate: '10-Nov-2023', installment: '₹50,000.00', receiptNo: 'RCP-08101'),
-    PassbookEntry(slNo: '02', chitDate: '10-Dec-2023', discountDiv: '₹6,250.00', divident: '₹150.00', paidDate: '12-Dec-2023', installment: '₹43,600.00', receiptNo: 'RCP-08422'),
-    PassbookEntry(slNo: '03', chitDate: '10-Jan-2024', discountDiv: '₹5,800.00', divident: '₹200.00', paidDate: '11-Jan-2024', installment: '₹44,000.00', receiptNo: 'RCP-08990'),
-    PassbookEntry(slNo: '04', chitDate: '10-Feb-2024', discountDiv: '₹5,400.00', divident: '₹150.00', paidDate: '10-Feb-2024', installment: '₹44,450.00', receiptNo: 'RCP-09312'),
-    PassbookEntry(slNo: '05', chitDate: '10-Mar-2024', discountDiv: '₹5,200.00', divident: '₹100.00', paidDate: '14-Mar-2024', installment: '₹44,700.00', receiptNo: 'RCP-09780'),
-    PassbookEntry(slNo: '06', chitDate: '10-Apr-2024', discountDiv: '₹5,000.00', divident: '₹150.00', paidDate: '10-Apr-2024', installment: '₹44,850.00', receiptNo: 'RCP-10145'),
-    PassbookEntry(slNo: '07', chitDate: '10-May-2024', discountDiv: '₹4,800.00', divident: '₹100.00', paidDate: '11-May-2024', installment: '₹45,100.00', receiptNo: 'RCP-10620'),
-    PassbookEntry(slNo: '08', chitDate: '10-Jun-2024', discountDiv: '₹4,500.00', divident: '₹120.00', paidDate: '12-Jun-2024', installment: '₹45,380.00', receiptNo: 'RCP-11005'),
-    PassbookEntry(slNo: '09', chitDate: '10-Jul-2024', discountDiv: '₹4,200.00', divident: '₹150.00', paidDate: '10-Jul-2024', installment: '₹45,650.00', receiptNo: 'RCP-11440'),
+    PassbookEntry(slNo: '01', auctionDate: '10-Nov-2023', discountDiv: '₹ -', dividend: '₹ -', paidDate: '10-Nov-2023', installment: '₹50,000.00', receiptNo: 'RCP-08101'),
+    PassbookEntry(slNo: '02', auctionDate: '10-Dec-2023', discountDiv: '₹6,250.00', dividend: '₹150.00', paidDate: '12-Dec-2023', installment: '₹43,600.00', receiptNo: 'RCP-08422'),
+    PassbookEntry(slNo: '03', auctionDate: '10-Jan-2024', discountDiv: '₹5,800.00', dividend: '₹200.00', paidDate: '11-Jan-2024', installment: '₹44,000.00', receiptNo: 'RCP-08990'),
+    PassbookEntry(slNo: '04', auctionDate: '10-Feb-2024', discountDiv: '₹5,400.00', dividend: '₹150.00', paidDate: '10-Feb-2024', installment: '₹44,450.00', receiptNo: 'RCP-09312'),
+    PassbookEntry(slNo: '05', auctionDate: '10-Mar-2024', discountDiv: '₹5,200.00', dividend: '₹100.00', paidDate: '14-Mar-2024', installment: '₹44,700.00', receiptNo: 'RCP-09780'),
+    PassbookEntry(slNo: '06', auctionDate: '10-Apr-2024', discountDiv: '₹5,000.00', dividend: '₹150.00', paidDate: '10-Apr-2024', installment: '₹44,850.00', receiptNo: 'RCP-10145'),
+    PassbookEntry(slNo: '07', auctionDate: '10-May-2024', discountDiv: '₹4,800.00', dividend: '₹100.00', paidDate: '11-May-2024', installment: '₹45,100.00', receiptNo: 'RCP-10620'),
+    PassbookEntry(slNo: '08', auctionDate: '10-Jun-2024', discountDiv: '₹4,500.00', dividend: '₹120.00', paidDate: '12-Jun-2024', installment: '₹45,380.00', receiptNo: 'RCP-11005'),
+    PassbookEntry(slNo: '09', auctionDate: '10-Jul-2024', discountDiv: '₹4,200.00', dividend: '₹150.00', paidDate: '10-Jul-2024', installment: '₹45,650.00', receiptNo: 'RCP-11440'),
   ];
 
   Future<void> _handleDownload() async {
@@ -61,9 +95,9 @@ class _PassbookScreenState extends State<PassbookScreen> {
       final String csvFilePath = '${directory.path}/Chit_Passbook_${widget.chit.groupCode.replaceAll(' ', '_')}.csv';
       final File csvFile = File(csvFilePath);
       final StringBuffer csv = StringBuffer();
-      csv.writeln('SL. NO.,CHIT DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
+      csv.writeln('SL. NO.,AUCTION DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
       for (final e in _entries) {
-        csv.writeln('${e.slNo},${e.chitDate},${e.discountDiv},${e.divident},${e.paidDate},${e.installment},${e.receiptNo}');
+        csv.writeln('${e.slNo},${e.auctionDate},${e.discountDiv},${e.dividend},${e.paidDate},${e.installment},${e.receiptNo}');
       }
       await csvFile.writeAsString(csv.toString());
 
@@ -118,9 +152,9 @@ class _PassbookScreenState extends State<PassbookScreen> {
       final String shareFilePath = '${tempDir.path}/Passbook_${widget.chit.groupCode.replaceAll(' ', '_')}.csv';
       final File shareFile = File(shareFilePath);
       final StringBuffer csv = StringBuffer();
-      csv.writeln('SL. NO.,CHIT DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
+      csv.writeln('SL. NO.,AUCTION DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
       for (final e in _entries) {
-        csv.writeln('${e.slNo},${e.chitDate},${e.discountDiv},${e.divident},${e.paidDate},${e.installment},${e.receiptNo}');
+        csv.writeln('${e.slNo},${e.auctionDate},${e.discountDiv},${e.dividend},${e.paidDate},${e.installment},${e.receiptNo}');
       }
       await shareFile.writeAsString(csv.toString());
 
@@ -146,311 +180,159 @@ class _PassbookScreenState extends State<PassbookScreen> {
     }
   }
 
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      centerTitle: false,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
+        onPressed: () => Navigator.of(context).maybePop(),
+      ),
+      title: Text(
+        'Passbook',
+        style: GoogleFonts.manrope(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              children: [
-                // Back button (arrow)
-                GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.only(right: 8.0),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: Color(0xFF000000),
-                      size: 24,
-                    ),
-                  ),
-                ),
-                // Title "Passbook"
-                Text(
-                  'Passbook',
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF000000),
-                  ),
-                ),
-              ],
+      backgroundColor: kBg,
+      appBar: _buildAppBar(),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.only(left: 16, top: 16, bottom: 16),
+                child: _buildPassbookTable(),
+              ),
             ),
-          ),
+            _buildBottomActions(),
+          ],
         ),
       ),
-      body: Column(
+    );
+  }
+
+  Widget _buildPassbookTable() {
+    final double totalHeight = _rowHeights.reduce((a, b) => a + b);
+
+    return SizedBox(
+      height: totalHeight,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Excel Box Grid Ledger Table Container
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16.0, 10.0, 16.0, 10.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFF94A3B8),
-                    width: 1.0,
-                  ),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A000000),
-                      offset: Offset(0, 4),
-                      blurRadius: 8,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final double colWidth = (constraints.maxWidth / 10).clamp(34.0, 60.0);
-
-                    return SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: SizedBox(
-                        width: colWidth * 10 > constraints.maxWidth ? colWidth * 10 : constraints.maxWidth,
-                        height: constraints.maxHeight,
-                        child: Row(
-                          children: [
-                            // 1. Blue Excel Header Column (Left)
-                            Expanded(
-                              flex: 1,
-                              child: Container(
-                                color: const Color(0xFF3C93F4), // Darker rich royal blue
-                                child: Column(
-                                  children: [
-                                    _buildExcelHeaderBox('RECEIPT NO.', flex: 16),
-                                    _buildExcelHeaderBox('INSTALLMENT (₹)', flex: 16),
-                                    _buildExcelHeaderBox('PAID DATE', flex: 15),
-                                    _buildExcelHeaderBox('DIVIDENT', flex: 13),
-                                    _buildExcelHeaderBox('DISCOUNT / DIV.', flex: 14),
-                                    _buildExcelHeaderBox('CHIT DATE', flex: 15),
-                                    _buildExcelHeaderBox('SL. NO.', flex: 11, isBottom: true),
-                                  ],
-                                ),
-                              ),
-                            ),
-
-                            // 2. 9 Data Columns with Excel Grid Box Borders
-                            ..._entries.asMap().entries.map((item) {
-                              final int index = item.key;
-                              final PassbookEntry entry = item.value;
-                              final Color cellBg = index.isEven ? Colors.white : const Color(0xFFF1F5F9);
-
-                              return Expanded(
-                                flex: 1,
-                                child: Container(
-                                  color: cellBg,
-                                  child: Column(
-                                    children: [
-                                      // RECEIPT NO.
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.receiptNo,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF000000), // Dark bold text
-                                          ),
-                                        ),
-                                        flex: 16,
-                                      ),
-                                      // INSTALLMENT (₹)
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.installment,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w900,
-                                            color: const Color(0xFF000000), // Solid dark black
-                                          ),
-                                        ),
-                                        flex: 16,
-                                      ),
-                                      // PAID DATE
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.paidDate,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF000000), // Dark bold text
-                                          ),
-                                        ),
-                                        flex: 15,
-                                      ),
-                                      // DIVIDENT
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.divident,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: entry.divident.contains('-')
-                                                ? const Color(0xFF64748B)
-                                                : const Color(0xFF000000), // Dark text
-                                          ),
-                                        ),
-                                        flex: 13,
-                                      ),
-                                      // DISCOUNT / DIV.
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.discountDiv,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: entry.discountDiv.contains('-')
-                                                ? const Color(0xFF64748B)
-                                                : const Color(0xFF000000), // Dark text
-                                          ),
-                                        ),
-                                        flex: 14,
-                                      ),
-                                      // CHIT DATE
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.chitDate,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 9.5,
-                                            fontWeight: FontWeight.w700,
-                                            color: const Color(0xFF000000), // Dark bold text
-                                          ),
-                                        ),
-                                        flex: 15,
-                                      ),
-                                      // SL. NO.
-                                      _buildExcelDataBox(
-                                        child: Text(
-                                          entry.slNo,
-                                          style: GoogleFonts.inter(
-                                            fontSize: 11.5,
-                                            fontWeight: FontWeight.w900,
-                                            color: const Color(0xFF000000), // Solid dark black
-                                          ),
-                                        ),
-                                        flex: 11,
-                                        isBottom: true,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            }),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-
-          // Bottom Bar: Download & Share Buttons
+          // Fixed left header column
           Container(
-            height: 66,
-            width: double.infinity,
+            width: _labelColWidth,
             decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                top: BorderSide(
-                  color: Color(0xFFC1C3C8),
-                  width: 1.0,
-                ),
+              color: kHeaderBlue,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
               ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Download Button (Darker blue)
-                SizedBox(
-                  width: 154,
-                  height: 36,
-                  child: ElevatedButton.icon(
-                    onPressed: _isDownloading ? null : _handleDownload,
-                    icon: _isDownloading
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+            child: Column(
+              children: List.generate(_labels.length, (i) {
+                final bool isLast = i == _labels.length - 1;
+                return Container(
+                  height: _rowHeights[i],
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    border: isLast
+                        ? null
+                        : const Border(
+                            bottom: BorderSide(
+                              color: kHeaderDivider,
+                              width: _borderWidth,
                             ),
-                          )
-                        : const Icon(
-                            Icons.download_rounded,
-                            color: Colors.white,
-                            size: 16,
                           ),
-                    label: Text(
-                      _isDownloading ? 'Saving...' : 'Download',
+                  ),
+                  child: RotatedBox(
+                    quarterTurns: 3,
+                    child: Text(
+                      _labels[i],
+                      maxLines: 1,
                       style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 10.06,
+                        height: 13.41 / 10.06,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3C93F4),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(140),
-                      ),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
+                );
+              }),
+            ),
+          ),
+          // Scrollable data columns
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: List.generate(_entries.length, (colIndex) {
+                  final e = _entries[colIndex];
+                  final bool striped = colIndex.isOdd;
+                  final cells = [
+                    e.receiptNo,
+                    e.installment,
+                    e.paidDate,
+                    e.dividend,
+                    e.discountDiv,
+                    e.auctionDate,
+                    e.slNo,
+                  ];
 
-                // Share Button (Darker blue outline & text)
-                SizedBox(
-                  width: 154,
-                  height: 36,
-                  child: OutlinedButton.icon(
-                    onPressed: _isSharing ? null : _handleShare,
-                    icon: _isSharing
-                        ? const SizedBox(
-                            width: 14,
-                            height: 14,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Color(0xFF3C93F4),
+                  return Container(
+                    width: _dataColWidth,
+                    decoration: BoxDecoration(
+                      color: striped ? kStripe : Colors.white,
+                      border: const Border(
+                        right: BorderSide(
+                          color: kDivider,
+                          width: _borderWidth,
+                        ),
+                      ),
+                    ),
+                    child: Column(
+                      children: List.generate(cells.length, (rowIndex) {
+                        return Container(
+                          height: _rowHeights[rowIndex],
+                          alignment: Alignment.center,
+                          child: RotatedBox(
+                            quarterTurns: 3,
+                            child: Text(
+                              cells[rowIndex],
+                              maxLines: 1,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.inter(
+                                fontSize: 10.06,
+                                height: 13.41 / 10.06,
+                                fontWeight: _rowWeights[rowIndex],
+                                color: kValueText,
+                              ),
                             ),
-                          )
-                        : const Icon(
-                            Icons.share_outlined,
-                            color: Color(0xFF3C93F4),
-                            size: 16,
                           ),
-                    label: Text(
-                      _isSharing ? 'Sharing...' : 'Share',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF3C93F4),
-                      ),
+                        );
+                      }),
                     ),
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF3C93F4), width: 1.2),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(140),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                ),
-              ],
+                  );
+                }),
+              ),
             ),
           ),
         ],
@@ -458,53 +340,98 @@ class _PassbookScreenState extends State<PassbookScreen> {
     );
   }
 
-  Widget _buildExcelHeaderBox(String text, {required int flex, bool isBottom = false}) {
-    return Expanded(
-      flex: flex,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            right: const BorderSide(color: Color(0x40FFFFFF), width: 0.8),
-            bottom: isBottom
-                ? BorderSide.none
-                : const BorderSide(color: Color(0x40FFFFFF), width: 0.8),
+  Widget _buildBottomActions() {
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: _isDownloading ? null : _handleDownload,
+                  child: Container(
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: kGold,
+                      borderRadius: BorderRadius.circular(39),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _isDownloading
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.file_download_outlined,
+                                size: 16, color: Colors.white),
+                        const SizedBox(width: 6),
+                        Text(
+                          _isDownloading ? 'Saving...' : 'Download',
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: _isSharing ? null : _handleShare,
+                  child: Container(
+                    height: 36,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(39),
+                      border: Border.all(color: kGold, width: 1),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _isSharing
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: kGold,
+                                ),
+                              )
+                            : const Icon(Icons.share_outlined, size: 16, color: kGold),
+                        const SizedBox(width: 6),
+                        Text(
+                          _isSharing ? 'Sharing...' : 'Share',
+                          style: GoogleFonts.manrope(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: kGold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        alignment: Alignment.center,
-        child: RotatedBox(
-          quarterTurns: 3,
-          child: Text(
-            text,
-            style: GoogleFonts.inter(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-              letterSpacing: 0.4,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExcelDataBox({required Widget child, required int flex, bool isBottom = false}) {
-    return Expanded(
-      flex: flex,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            right: const BorderSide(color: Color(0xFF94A3B8), width: 0.8),
-            bottom: isBottom
-                ? BorderSide.none
-                : const BorderSide(color: Color(0xFF94A3B8), width: 0.8),
-          ),
-        ),
-        alignment: Alignment.center,
-        child: RotatedBox(
-          quarterTurns: 3,
-          child: child,
         ),
       ),
     );
   }
 }
+

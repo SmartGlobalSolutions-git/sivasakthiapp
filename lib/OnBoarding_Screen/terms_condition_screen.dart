@@ -7,7 +7,8 @@ class TermsAndConditionScreen extends StatefulWidget {
   const TermsAndConditionScreen({super.key});
 
   @override
-  State<TermsAndConditionScreen> createState() => _TermsAndConditionScreenState();
+  State<TermsAndConditionScreen> createState() =>
+      _TermsAndConditionScreenState();
 }
 
 class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
@@ -21,7 +22,6 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
     final regularStyle = GoogleFonts.inter(
       fontSize: 12,
       fontWeight: FontWeight.w400,
-      height: 21 / 12,
       letterSpacing: 0,
       color: const Color(0xFF1D2939),
     );
@@ -30,7 +30,6 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
     final boldStyle = GoogleFonts.inter(
       fontSize: 12,
       fontWeight: FontWeight.w700,
-      height: 21 / 12,
       letterSpacing: 0,
       color: const Color(0xFF101828),
     );
@@ -70,7 +69,6 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                 ),
               ),
             ),
-
 
             // Scrollable Content (clean background without outline)
             Expanded(
@@ -172,10 +170,15 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
 
             // Bottom Sticky Card with Checkbox & Agree Button
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20.0,
+                vertical: 16.0,
+              ),
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.08),
@@ -200,12 +203,17 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                             width: 18.461538,
                             height: 18.461538,
                             decoration: BoxDecoration(
-                              color: Colors.white, // always white background — no fill
+                              color: Colors
+                                  .white, // always white background — no fill
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: _isAgreed
-                                    ? const Color(0xFF12B76A) // green border when checked
-                                    : const Color(0xFFD0D5DD), // gray border when unchecked
+                                    ? const Color(
+                                        0xFF12B76A,
+                                      ) // green border when checked
+                                    : const Color(
+                                        0xFFD0D5DD,
+                                      ), // gray border when unchecked
                                 width: 1.5,
                               ),
                             ),
@@ -286,15 +294,9 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: boldStyle,
-          ),
+          Text(title, style: boldStyle),
           const SizedBox(height: 4),
-          Text(
-            body,
-            style: regularStyle,
-          ),
+          Text(body, style: regularStyle),
         ],
       ),
     );
