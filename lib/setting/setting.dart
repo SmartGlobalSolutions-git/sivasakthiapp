@@ -10,8 +10,15 @@ import 'package:siva_sakthi/setting/terms_condition.dart';
 // SETTING SCREEN
 // ==========================================================
 
-class SettingScreen extends StatelessWidget {
+class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
+
+  @override
+  State<SettingScreen> createState() => _SettingScreenState();
+}
+
+class _SettingScreenState extends State<SettingScreen> {
+  String _selectedLanguage = 'English';
 
   static const Color kTitle = Color(0xFF000000);
   static const Color kSectionLabel = Color(0xFF6B7280);
@@ -20,6 +27,106 @@ class SettingScreen extends StatelessWidget {
   static const Color kRed = Color(0xFFE11D48);
   static const Color kPageBg = Color(0xFFF5F5F6);
   static const Color kDivider = Color(0xFFEDEDED);
+
+  void _showLanguageBottomSheet(BuildContext context) {
+    final languages = ['English', 'Tamil (தமிழ்)'];
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Select Language',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF111827),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ...languages.map((lang) {
+              final isSelected = _selectedLanguage == lang ||
+                  (_selectedLanguage == 'English' && lang == 'English') ||
+                  (_selectedLanguage == 'Tamil' && lang.startsWith('Tamil'));
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: isSelected ? const Color(0xFFF0F7FF) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? const Color(0xFF3C93F4) : const Color(0xFFE2E8F0),
+                    width: isSelected ? 1.5 : 1.0,
+                  ),
+                ),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                  title: Text(
+                    lang,
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      color: isSelected ? const Color(0xFF3C93F4) : const Color(0xFF1E2638),
+                    ),
+                  ),
+                  trailing: isSelected
+                      ? const Icon(Icons.check_circle, color: Color(0xFF3C93F4), size: 22)
+                      : const Icon(Icons.radio_button_unchecked, color: Color(0xFF94A3B8), size: 22),
+                  onTap: () {
+                    setState(() {
+                      _selectedLanguage = lang.contains('Tamil') ? 'Tamil' : 'English';
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              );
+            }),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +185,8 @@ class SettingScreen extends StatelessWidget {
                 iconAsset: 'assets/setting/lan.png',
                 fallback: Icons.language,
                 title: 'Language',
-                value: 'English',
-                onTap: () {},
+                value: _selectedLanguage,
+                onTap: () => _showLanguageBottomSheet(context),
               ),
             ]),
             SizedBox(height: h(18)),

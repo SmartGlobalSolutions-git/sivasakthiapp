@@ -1,7 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import 'package:pinput/pinput.dart';
+import '../services/device_location_service.dart';
 import 'terms_condition_screen.dart';
 
 /// OTP Verification Screen: Figma Android Medium - 14
@@ -9,10 +13,14 @@ import 'terms_condition_screen.dart';
 /// Screen 4: Android Medium - 14 (Enter your OTP)
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
+  final String token;
+  final String cusId;
 
   const OtpVerificationScreen({
     super.key,
     this.phoneNumber = '',
+    this.token = '',
+    this.cusId = '',
   });
 
   @override
@@ -20,9 +28,8 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  final TextEditingController _otpController = TextEditingController();
+  final FocusNode _otpFocusNode = FocusNode();
 
   int _remainingSeconds = 45;
   Timer? _countdownTimer;
@@ -30,11 +37,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    for (final c in _controllers) {
-      c.addListener(() {
-        setState(() {});
-      });
-    }
+    _otpController.addListener(() {
+      setState(() {});
+    });
     _startTimer();
   }
 
@@ -53,24 +58,134 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   @override
   void dispose() {
     _countdownTimer?.cancel();
-    for (final c in _controllers) {
-      c.dispose();
-    }
-    for (final f in _focusNodes) {
-      f.dispose();
-    }
+    _otpController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
   }
 
-  void _onVerify() {
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            const TermsAndConditionScreen(),
-      ),
-    );
+  bool _isLoading = false;
+  static const String _apiUrl = 'https://chitsoft.in/wapp/api/chit_api/';
+
+  Future<void> _onVerify() async {
+    if (_isLoading) return;
+
+    final otp = _otpController.text.trim();
+
+    if (otp.length < 6) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please enter the 6-digit OTP',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color(0xFF000000),
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+
+      final Map<String, String> formParams = {
+        'cid': '35318938',
+        'type': '6002',
+        'lt': loc['lat'] ?? '123',
+        'ln': loc['lng'] ?? '123',
+        'device_id': deviceId,
+        'mobile': widget.phoneNumber,
+        'otp': otp,
+        'token': widget.token,
+      };
+
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        body: formParams,
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint('==================================================');
+      debugPrint('OTP VERIFY API REQUEST: $formParams');
+      debugPrint('OTP VERIFY API STATUS CODE: ${response.statusCode}');
+      debugPrint('OTP VERIFY API RESPONSE BODY: ${response.body}');
+      debugPrint('==================================================');
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      final bool isError = data['error'] == true;
+      final String errorMsg = data['error_msg']?.toString() ??
+          (isError ? 'OTP verification failed' : 'OTP verified successfully');
+
+      if (!mounted) return;
+
+      if (isError) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: const Color(0xFF000000),
+            behavior: SnackBarBehavior.fixed,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      if (!isError) {
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                const TermsAndConditionScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('==================================================');
+      debugPrint('OTP VERIFY API EXCEPTION: $e');
+      debugPrint('==================================================');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please check internet connection.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color(0xFF000000),
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -141,7 +256,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 builder: (context, constraints) {
                   final double scaleW = constraints.maxWidth / 360.0;
                   final double scaleH = (constraints.maxHeight / 700.0).clamp(0.85, 1.2);
-                  final bool isOtpReady = _controllers.every((c) => c.text.trim().isNotEmpty);
+                  final bool isOtpReady = _otpController.text.trim().length == 6;
 
                   return Stack(
                     children: [
@@ -198,62 +313,39 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             const SizedBox(height: 28),
 
                             // 6 OTP Digit Boxes
-                            Row(
+                            Pinput(
+                              length: 6,
+                              controller: _otpController,
+                              focusNode: _otpFocusNode,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: List.generate(6, (index) {
-                                return SizedBox(
-                                  width: (constraints.maxWidth - (30.0 * scaleW) - (5 * 8)) / 6,
-                                  height: 48,
-                                  child: TextField(
-                                    controller: _controllers[index],
-                                    focusNode: _focusNodes[index],
-                                    keyboardType: TextInputType.number,
-                                    textAlign: TextAlign.center,
-                                    maxLength: 1,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF101828),
-                                    ),
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
-                                    decoration: InputDecoration(
-                                      counterText: '',
-                                      contentPadding: EdgeInsets.zero,
-                                      filled: true,
-                                      fillColor: const Color(0xFFEDEDED),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFEDEDED),
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFEDEDED),
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFF3C93F4),
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                    ),
-                                    onChanged: (value) {
-                                      if (value.isNotEmpty && index < 5) {
-                                        _focusNodes[index + 1].requestFocus();
-                                      } else if (value.isEmpty && index > 0) {
-                                        _focusNodes[index - 1].requestFocus();
-                                      }
-                                      setState(() {});
-                                    },
-                                  ),
-                                );
-                              }),
+                              defaultPinTheme: PinTheme(
+                                width: (constraints.maxWidth - (30.0 * scaleW) - (5 * 8)) / 6,
+                                height: 48,
+                                textStyle: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF101828),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEDEDED),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFFEDEDED)),
+                                ),
+                              ),
+                              focusedPinTheme: PinTheme(
+                                width: (constraints.maxWidth - (30.0 * scaleW) - (5 * 8)) / 6,
+                                height: 48,
+                                textStyle: GoogleFonts.inter(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF101828),
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFEDEDED),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFF3C93F4), width: 1.5),
+                                ),
+                              ),
                             ),
 
                             const SizedBox(height: 24),
@@ -300,15 +392,17 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             const Spacer(),
 
                             // Verify Button (Always enabled appearance, navigates only when OTP is complete)
-                            SizedBox(
+                             SizedBox(
                               width: double.infinity,
                               height: 52,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  if (isOtpReady) {
-                                    _onVerify();
-                                  }
-                                },
+                                onPressed: _isLoading
+                                    ? null
+                                    : () {
+                                        if (isOtpReady) {
+                                          _onVerify();
+                                        }
+                                      },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF3C93F4),
                                   foregroundColor: Colors.white,
@@ -317,14 +411,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                     borderRadius: BorderRadius.circular(68),
                                   ),
                                 ),
-                                child: Text(
-                                  'Verify',
-                                  style: GoogleFonts.inter(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Colors.white,
-                                  ),
-                                ),
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Verify',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white,
+                                        ),
+                                      ),
                               ),
                             ),
                             SizedBox(height: 51 * scaleH),

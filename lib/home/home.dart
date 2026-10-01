@@ -1160,24 +1160,15 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: w(16),
-            height: w(16),
+            width: w(14),
+            height: w(14),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
-              color: selected ? Colors.white : Colors.transparent,
+              color: selected ? Colors.transparent : const Color(0x66E2E2E2),
+              border: selected
+                  ? Border.all(color: Colors.white, width: w(2.0))
+                  : null,
             ),
-            alignment: Alignment.center,
-            child: selected
-                ? Container(
-                    width: w(8),
-                    height: w(8),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: kBlue,
-                    ),
-                  )
-                : null,
           ),
           SizedBox(width: w(8)),
           Text(

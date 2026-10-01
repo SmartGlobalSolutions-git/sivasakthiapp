@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/new_user/new_calculator.dart';
 import 'package:siva_sakthi/chat_bot/chat.dart';
+import 'package:siva_sakthi/setting/need_help.dart';
+import 'package:siva_sakthi/setting/profile_info.dart';
+import 'package:siva_sakthi/setting/setting.dart';
 
 class NewUserMenuScreen extends StatelessWidget {
   const NewUserMenuScreen({super.key});
@@ -87,11 +90,10 @@ class NewUserMenuScreen extends StatelessWidget {
                   // Need Help ? button (matching subscription_plan_screen)
                   GestureDetector(
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Support representative will contact you soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
                       );
                     },
                     child: Container(
@@ -115,6 +117,7 @@ class NewUserMenuScreen extends StatelessWidget {
                             width: 14 * scaleW,
                             height: 14 * scaleW,
                             fit: BoxFit.contain,
+                            color: const Color(0xFF3C93F4),
                             errorBuilder: (context, error, stackTrace) => const Icon(
                               Icons.headset_mic,
                               size: 14,
@@ -127,7 +130,7 @@ class NewUserMenuScreen extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: (11 * scaleW).clamp(9.5, 13.0),
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF018F46),
+                              color: const Color(0xFF3C93F4),
                             ),
                           ),
                         ],
@@ -162,7 +165,13 @@ class NewUserMenuScreen extends StatelessWidget {
                       fallbackIcon: Icons.person_outline,
                       label: 'Profile',
                       scaleW: scaleW,
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+                        );
+                      },
                     ),
                     _buildCardMenuItem(
                       context,
@@ -221,7 +230,13 @@ class NewUserMenuScreen extends StatelessWidget {
                       fallbackIcon: Icons.settings_outlined,
                       label: 'Settings',
                       scaleW: scaleW,
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SettingScreen()),
+                        );
+                      },
                     ),
                     _buildCardMenuItem(
                       context,

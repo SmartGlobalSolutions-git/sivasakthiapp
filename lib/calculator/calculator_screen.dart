@@ -534,28 +534,18 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 16 * scaleW.clamp(0.85, 1.2),
-            height: 16 * scaleW.clamp(0.85, 1.2),
+            width: 14 * scaleW.clamp(0.85, 1.2),
+            height: 14 * scaleW.clamp(0.85, 1.2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isSelected ? Colors.transparent : Colors.white24,
-              border: Border.all(
-                color: isSelected ? Colors.white : Colors.white60,
-                width: 2,
-              ),
+              color: isSelected ? Colors.transparent : const Color(0x66E2E2E2),
+              border: isSelected
+                  ? Border.all(
+                      color: Colors.white,
+                      width: 2.0 * scaleW.clamp(0.85, 1.2),
+                    )
+                  : null,
             ),
-            child: isSelected
-                ? Center(
-                    child: Container(
-                      width: 6 * scaleW.clamp(0.85, 1.2),
-                      height: 6 * scaleW.clamp(0.85, 1.2),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white,
-                      ),
-                    ),
-                  )
-                : null,
           ),
           SizedBox(width: 6 * scaleW.clamp(0.85, 1.1)),
           Text(

@@ -1,16 +1,21 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
+import '../services/device_location_service.dart';
 import 'chit_enquiry_dialog.dart';
 
 class SubscriptionPlanScreen extends StatefulWidget {
   final String investmentAmount;
   final String durationMonths;
+  final String planId;
 
   const SubscriptionPlanScreen({
     super.key,
     this.investmentAmount = '1,00,000',
     this.durationMonths = '20',
+    this.planId = '16',
   });
 
   @override
@@ -18,43 +23,98 @@ class SubscriptionPlanScreen extends StatefulWidget {
 }
 
 class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
+  Map<String, dynamic>? _itemData;
+  List<dynamic> _scheduleList = [];
+  Map<String, dynamic>? _totalsData;
+
+  static const String _apiUrl = 'https://chitsoft.in/wapp/api/chit_api/';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSubscriptionPlan();
+  }
+
+  String _formatAmount(dynamic val) {
+    if (val == null) return '0';
+    final numVal = num.tryParse(val.toString()) ?? 0;
+    final str = numVal.toInt().toString();
+    if (str.length <= 3) return str;
+    final lastThree = str.substring(str.length - 3);
+    final otherNumbers = str.substring(0, str.length - 3);
+    final formatted = otherNumbers.replaceAllMapped(
+        RegExp(r'(\d+?)(?=(\d\d)+$)'), (Match m) => '${m[1]},');
+    return '$formatted,$lastThree';
+  }
+
+  Future<void> _fetchSubscriptionPlan() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final String deviceId = await DeviceLocationService.getDeviceId();
+    final Map<String, String> loc = await DeviceLocationService.getLocation();
+
+    final Map<String, String> formParams = {
+      'cid': '35318938',
+      'type': '6003',
+      'lt': loc['lat'] ?? '123',
+      'ln': loc['lng'] ?? '123',
+      'device_id': deviceId.isNotEmpty ? deviceId : '123',
+      'token': 'aiwg7ljinjgxw26r',
+      'id': widget.planId,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        body: formParams,
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint('==================================================');
+      debugPrint('SUBSCRIPTION PLAN API REQUEST: $formParams');
+      debugPrint('SUBSCRIPTION PLAN API STATUS CODE: ${response.statusCode}');
+      debugPrint('SUBSCRIPTION PLAN API RESPONSE BODY: ${response.body}');
+      debugPrint('==================================================');
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+
+        setState(() {
+          _itemData = data['item'] as Map<String, dynamic>?;
+          _scheduleList = (data['schedule'] as List<dynamic>?) ?? [];
+          _totalsData = data['totals'] as Map<String, dynamic>?;
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load plan (${response.statusCode})';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('==================================================');
+      debugPrint('SUBSCRIPTION PLAN API EXCEPTION: $e');
+      debugPrint('==================================================');
+
+      setState(() {
+        _errorMessage = 'Network error: Unable to load subscription plan';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final MediaQueryData mediaQuery = MediaQuery.of(context);
-    final Size screenSize = mediaQuery.size;
-    final double screenWidth = screenSize.width;
-    final double screenHeight = screenSize.height;
-    final double scaleW = (screenWidth / 360.0).clamp(0.85, 1.25);
-    final double scaleH = (screenHeight / 800.0).clamp(0.85, 1.25);
-    const primaryBlue = Color(0xFF3C93F4);
-
-    final double topPadding = mediaQuery.padding.top;
-    final double bottomPadding = mediaQuery.padding.bottom;
-    final double statusBarH = topPadding > 20 ? topPadding : 24.0;
-
-    final List<Map<String, String>> planRows = [
-      {'month': '1', 'sub': '5,000', 'div': '0', 'bid': '0', 'prize': '0'},
-      {'month': '2', 'sub': '5,000', 'div': '0', 'bid': '30,000', 'prize': '70,000'},
-      {'month': '3', 'sub': '3,750', 'div': '1,250', 'bid': '30,000', 'prize': '70,000'},
-      {'month': '4', 'sub': '3,750', 'div': '1,250', 'bid': '28,000', 'prize': '72,000'},
-      {'month': '5', 'sub': '3,850', 'div': '1,150', 'bid': '25,000', 'prize': '75,000'},
-      {'month': '6', 'sub': '4,000', 'div': '1,000', 'bid': '24,500', 'prize': '75,000'},
-      {'month': '7', 'sub': '4,025', 'div': '975', 'bid': '24,000', 'prize': '76,000'},
-      {'month': '8', 'sub': '4,050', 'div': '950', 'bid': '22,500', 'prize': '77,500'},
-      {'month': '9', 'sub': '4,125', 'div': '875', 'bid': '21,000', 'prize': '79,000'},
-      {'month': '10', 'sub': '4,200', 'div': '800', 'bid': '20,000', 'prize': '80,000'},
-      {'month': '11', 'sub': '4,250', 'div': '750', 'bid': '19,000', 'prize': '81,000'},
-      {'month': '12', 'sub': '4,300', 'div': '700', 'bid': '18,000', 'prize': '82,000'},
-      {'month': '13', 'sub': '4,350', 'div': '650', 'bid': '17,000', 'prize': '83,000'},
-      {'month': '14', 'sub': '4,400', 'div': '600', 'bid': '16,000', 'prize': '84,000'},
-      {'month': '15', 'sub': '4,450', 'div': '550', 'bid': '15,000', 'prize': '85,000'},
-      {'month': '16', 'sub': '4,500', 'div': '500', 'bid': '13,000', 'prize': '87,000'},
-      {'month': '17', 'sub': '4,600', 'div': '400', 'bid': '11,000', 'prize': '89,000'},
-      {'month': '18', 'sub': '4,700', 'div': '300', 'bid': '9,000', 'prize': '91,000'},
-      {'month': '19', 'sub': '4,800', 'div': '200', 'bid': '7,000', 'prize': '93,000'},
-      {'month': '20', 'sub': '4,900', 'div': '100', 'bid': '5,000', 'prize': '95,000'},
-    ];
+    final Size screenSize = MediaQuery.of(context).size;
+    final double statusBarH = MediaQuery.of(context).padding.top;
+    final double bottomPadding = MediaQuery.of(context).padding.bottom;
+    final double scaleW = screenSize.width / 360.0;
+    final double scaleH = screenSize.height / 800.0;
+    const Color primaryBlue = Color(0xFF3C93F4);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -205,7 +265,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                       bottom: 12 * scaleH.clamp(0.85, 1.2),
                     ),
                     child: Text(
-                      '₹ ${widget.investmentAmount}',
+                      '₹ ${_itemData != null && _itemData!['ch_value'] != null ? _formatAmount(_itemData!['ch_value']) : widget.investmentAmount}',
                       style: GoogleFonts.inter(
                         fontSize: 32 * scaleW.clamp(0.85, 1.2),
                         fontWeight: FontWeight.w800,
@@ -246,50 +306,86 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                               child: Row(
                                 children: [
                                   _buildHeaderCell('Month', flex: 2, scale: scaleW),
-                                  _buildHeaderCell('Subscription\n(₹)', flex: 3, scale: scaleW),
-                                  _buildHeaderCell('Dividend\n(₹)', flex: 2, scale: scaleW),
+                                  _buildHeaderCell('Due Amount\n(₹)', flex: 3, scale: scaleW),
+                                  _buildHeaderCell('Divident\n(₹)', flex: 2, scale: scaleW),
                                   _buildHeaderCell('Bid Value\n(₹)', flex: 2, scale: scaleW),
-                                  _buildHeaderCell('Prize Amount\n(₹)', flex: 3, scale: scaleW, showRightBorder: false),
+                                  _buildHeaderCell('Payment\n(₹)', flex: 3, scale: scaleW, showRightBorder: false),
                                 ],
                               ),
                             ),
 
-                            // Scrollable Rows (1 to 20) with crisp vertical & horizontal lines
+                            // Scrollable Rows (dynamic schedule list from API)
                             Expanded(
-                              child: ScrollConfiguration(
-                                behavior: const ScrollBehavior().copyWith(overscroll: false),
-                                child: ListView.builder(
-                                  physics: const ClampingScrollPhysics(),
-                                  itemCount: planRows.length,
-                                  itemBuilder: (context, index) {
-                                  final row = planRows[index];
-                                  final isEven = index % 2 == 0;
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: isEven ? const Color(0xFFFAFCFF) : Colors.white,
-                                      border: const Border(
-                                        bottom: BorderSide(
-                                          color: Color(0xFFCBD5E1),
-                                          width: 1.0,
-                                        ),
+                              child: _isLoading
+                                  ? const Center(
+                                      child: CircularProgressIndicator(
+                                        color: primaryBlue,
                                       ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        _buildDataCell(row['month']!, flex: 2, isMonth: true, scale: scaleW),
-                                        _buildDataCell(row['sub']!, flex: 3, scale: scaleW),
-                                        _buildDataCell(row['div']!, flex: 2, scale: scaleW),
-                                        _buildDataCell(row['bid']!, flex: 2, scale: scaleW),
-                                        _buildDataCell(row['prize']!, flex: 3, scale: scaleW, showRightBorder: false),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
+                                    )
+                                  : _errorMessage != null && _scheduleList.isEmpty
+                                      ? Center(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                _errorMessage!,
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 13,
+                                                  color: const Color(0xFF64748B),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              ElevatedButton(
+                                                onPressed: _fetchSubscriptionPlan,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: primaryBlue,
+                                                  elevation: 0,
+                                                ),
+                                                child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : ScrollConfiguration(
+                                          behavior: const ScrollBehavior().copyWith(overscroll: false),
+                                          child: ListView.builder(
+                                            physics: const ClampingScrollPhysics(),
+                                            itemCount: _scheduleList.length,
+                                            itemBuilder: (context, index) {
+                                              final row = _scheduleList[index];
+                                              final isEven = index % 2 == 0;
+                                              final monthStr = row['sno']?.toString() ?? '${index + 1}';
+                                              final subStr = _formatAmount(row['due_amt']);
+                                              final divStr = _formatAmount(row['divident']);
+                                              final bidStr = _formatAmount(row['bid_amt']);
+                                              final prizeStr = _formatAmount(row['payment']);
 
-                            // Total Row (Soft Blue #EBF4FE)
+                                              return Container(
+                                                decoration: BoxDecoration(
+                                                  color: isEven ? const Color(0xFFFAFCFF) : Colors.white,
+                                                  border: const Border(
+                                                    bottom: BorderSide(
+                                                      color: Color(0xFFCBD5E1),
+                                                      width: 1.0,
+                                                    ),
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    _buildDataCell(monthStr, flex: 2, isMonth: true, scale: scaleW),
+                                                    _buildDataCell(subStr, flex: 3, scale: scaleW),
+                                                    _buildDataCell(divStr, flex: 2, scale: scaleW),
+                                                    _buildDataCell(bidStr, flex: 2, scale: scaleW),
+                                                    _buildDataCell(prizeStr, flex: 3, scale: scaleW, showRightBorder: false),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                            ),
+
+                            // Total Row (Soft Blue #EBF4FE with dynamic totals from API)
                             Container(
                               decoration: const BoxDecoration(
                                 color: Color(0xFFEBF4FE),
@@ -302,10 +398,23 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                               child: Row(
                                 children: [
                                   _buildSummaryCell('Total', flex: 2, isLabel: true, scale: scaleW),
-                                  _buildSummaryCell('87,000', flex: 3, scale: scaleW),
-                                  _buildSummaryCell('13,000', flex: 2, scale: scaleW),
+                                  _buildSummaryCell(
+                                    _totalsData != null ? _formatAmount(_totalsData!['due_amt']) : '—',
+                                    flex: 3,
+                                    scale: scaleW,
+                                  ),
+                                  _buildSummaryCell(
+                                    _totalsData != null ? _formatAmount(_totalsData!['divident']) : '—',
+                                    flex: 2,
+                                    scale: scaleW,
+                                  ),
                                   _buildSummaryCell('—', flex: 2, scale: scaleW),
-                                  _buildSummaryCell('95,000', flex: 3, scale: scaleW, showRightBorder: false),
+                                  _buildSummaryCell(
+                                    _totalsData != null ? _formatAmount(_totalsData!['total']) : '—',
+                                    flex: 3,
+                                    scale: scaleW,
+                                    showRightBorder: false,
+                                  ),
                                 ],
                               ),
                             ),

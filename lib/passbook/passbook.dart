@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/chat_bot/chat.dart';
 import 'package:siva_sakthi/passbook/passbook_view.dart';
+import 'package:siva_sakthi/services/device_location_service.dart';
 
 class PassbookSearchScreen extends StatefulWidget {
   const PassbookSearchScreen({super.key});
@@ -13,6 +16,9 @@ class PassbookSearchScreen extends StatefulWidget {
 class _PassbookSearchScreenState extends State<PassbookSearchScreen> {
   final TextEditingController _chitIdController = TextEditingController();
   DateTimeRange? _selectedRange;
+  List<dynamic> _chits = [];
+  bool _isLoadingChits = true;
+  String? _selectedChitId;
 
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kGold = Color(0xFF3C93F4);
@@ -21,6 +27,45 @@ class _PassbookSearchScreenState extends State<PassbookSearchScreen> {
   static const Color kPlaceholderGrey = Color(0xFF9CA3AF);
   static const Color kValueGrey = Color(0xFF374151);
   static const Color kFieldBorder = Color(0xFF878D97);
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchChits();
+  }
+
+  Future<void> _fetchChits() async {
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6006',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'cus_id': '1',
+        },
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['chits'] != null) {
+          setState(() {
+            _chits = data['chits'];
+            _isLoadingChits = false;
+          });
+        } else {
+          setState(() => _isLoadingChits = false);
+        }
+      } else {
+        setState(() => _isLoadingChits = false);
+      }
+    } catch (e) {
+      setState(() => _isLoadingChits = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -88,6 +133,7 @@ class _PassbookSearchScreenState extends State<PassbookSearchScreen> {
   void _onRefresh() {
     setState(() {
       _chitIdController.clear();
+      _selectedChitId = null;
       _selectedRange = null;
     });
   }
@@ -197,27 +243,61 @@ class _PassbookSearchScreenState extends State<PassbookSearchScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: TextField(
-                    controller: _chitIdController,
-                    style: GoogleFonts.manrope(
-                      fontSize: 14.3,
-                      fontWeight: FontWeight.w400,
-                      color: kValueGrey,
-                    ),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: 'Enter Chit ID :',
-                      hintStyle: GoogleFonts.manrope(
-                        fontSize: 14.3,
-                        fontWeight: FontWeight.w400,
-                        color: kPlaceholderGrey,
-                      ),
-                    ),
-                  ),
+                  child: _isLoadingChits
+                      ? const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : PopupMenuButton<String>(
+                          color: Colors.white,
+                          position: PopupMenuPosition.under,
+                          constraints: const BoxConstraints(maxHeight: 300),
+                          onSelected: (val) {
+                            setState(() {
+                              _selectedChitId = val;
+                              _chitIdController.text = val;
+                            });
+                          },
+                          itemBuilder: (context) {
+                            return _chits.map((chit) {
+                              return PopupMenuItem<String>(
+                                value: chit['chit_id'].toString(),
+                                child: Text(
+                                  '${chit['chit_id']}',
+                                  style: GoogleFonts.manrope(
+                                    fontSize: 14.3,
+                                    fontWeight: FontWeight.w400,
+                                    color: kValueGrey,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              );
+                            }).toList();
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  _selectedChitId ?? 'Select Chit ID:',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.manrope(
+                                    fontSize: _selectedChitId == null ? 12.0 : 14.3,
+                                    fontWeight: FontWeight.w400,
+                                    color: _selectedChitId == null ? kPlaceholderGrey : kValueGrey,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const Icon(Icons.arrow_drop_down, color: kLabelGrey),
+                            ],
+                          ),
+                        ),
                 ),
-                const SizedBox(width: 8),
-                const Icon(Icons.search, size: 17.88, color: kLabelGrey),
               ],
             ),
           ),

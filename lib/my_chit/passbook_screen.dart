@@ -7,81 +7,73 @@ import 'chit_model.dart';
 
 class PassbookEntry {
   final String slNo;
-  final String auctionDate;
-  final String discountDiv;
-  final String dividend;
-  final String paidDate;
-  final String installment;
   final String receiptNo;
+  final String receiptDate;
+  final String amount;
+  final String payType;
 
   const PassbookEntry({
     required this.slNo,
-    required this.auctionDate,
-    required this.discountDiv,
-    required this.dividend,
-    required this.paidDate,
-    required this.installment,
     required this.receiptNo,
+    required this.receiptDate,
+    required this.amount,
+    required this.payType,
   });
 }
 
-class PassbookScreen extends StatefulWidget {
+class ChitPassbookScreen extends StatefulWidget {
   final ChitData chit;
 
-  const PassbookScreen({super.key, required this.chit});
+  const ChitPassbookScreen({super.key, required this.chit});
 
   @override
-  State<PassbookScreen> createState() => _PassbookScreenState();
+  State<ChitPassbookScreen> createState() => _ChitPassbookScreenState();
 }
 
-class _PassbookScreenState extends State<PassbookScreen> {
+class _ChitPassbookScreenState extends State<ChitPassbookScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kGold = Color(0xFF3C93F4);
-  static const Color kHeaderBlue = Color(0xFF193FBD);
-  static const Color kHeaderDivider = Color(0xFF3C93F4);
+  static const Color kHeaderBlue = Color(0xFF3C93F4);
+  static const Color kHeaderDivider = Colors.white24;
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);
   static const Color kStripe = Color(0x80E5E5E5); // #E5E5E5 @ 50%
   static const double _borderWidth = 0.84;
 
   static const List<String> _labels = [
+    'S.NO',
     'RECEIPT NO.',
-    'INSTALLMENT (₹)',
-    'PAID DATE',
-    'DIVIDENT',
-    'DISCOUNT / DIV.',
-    'AUCTION DATE',
-    'SL. NO.',
+    'RECEIPT DATE',
+    'AMOUNT',
+    'PAY TYPE',
   ];
-  static const List<double> _rowHeights = [90, 120, 93, 62, 114, 103, 55];
+  static const List<double> _rowHeights = [70, 140, 140, 140, 148];
 
-  // Figma: INSTALLMENT and SL. NO. rows are bold (700), others regular
   static const List<FontWeight> _rowWeights = [
-    FontWeight.w400,
     FontWeight.w700,
     FontWeight.w400,
     FontWeight.w400,
-    FontWeight.w400,
-    FontWeight.w400,
     FontWeight.w700,
+    FontWeight.w400,
   ];
 
-  static const double _labelColWidth = 37.47;
-  static const double _dataColWidth = 35.8;
+  static const double _labelColWidth = 42.7;
+  static const double _dataColWidth = 42.7;
 
   bool _isDownloading = false;
   bool _isSharing = false;
 
   final List<PassbookEntry> _entries = const [
-    PassbookEntry(slNo: '01', auctionDate: '10-Nov-2023', discountDiv: '₹ -', dividend: '₹ -', paidDate: '10-Nov-2023', installment: '₹50,000.00', receiptNo: 'RCP-08101'),
-    PassbookEntry(slNo: '02', auctionDate: '10-Dec-2023', discountDiv: '₹6,250.00', dividend: '₹150.00', paidDate: '12-Dec-2023', installment: '₹43,600.00', receiptNo: 'RCP-08422'),
-    PassbookEntry(slNo: '03', auctionDate: '10-Jan-2024', discountDiv: '₹5,800.00', dividend: '₹200.00', paidDate: '11-Jan-2024', installment: '₹44,000.00', receiptNo: 'RCP-08990'),
-    PassbookEntry(slNo: '04', auctionDate: '10-Feb-2024', discountDiv: '₹5,400.00', dividend: '₹150.00', paidDate: '10-Feb-2024', installment: '₹44,450.00', receiptNo: 'RCP-09312'),
-    PassbookEntry(slNo: '05', auctionDate: '10-Mar-2024', discountDiv: '₹5,200.00', dividend: '₹100.00', paidDate: '14-Mar-2024', installment: '₹44,700.00', receiptNo: 'RCP-09780'),
-    PassbookEntry(slNo: '06', auctionDate: '10-Apr-2024', discountDiv: '₹5,000.00', dividend: '₹150.00', paidDate: '10-Apr-2024', installment: '₹44,850.00', receiptNo: 'RCP-10145'),
-    PassbookEntry(slNo: '07', auctionDate: '10-May-2024', discountDiv: '₹4,800.00', dividend: '₹100.00', paidDate: '11-May-2024', installment: '₹45,100.00', receiptNo: 'RCP-10620'),
-    PassbookEntry(slNo: '08', auctionDate: '10-Jun-2024', discountDiv: '₹4,500.00', dividend: '₹120.00', paidDate: '12-Jun-2024', installment: '₹45,380.00', receiptNo: 'RCP-11005'),
-    PassbookEntry(slNo: '09', auctionDate: '10-Jul-2024', discountDiv: '₹4,200.00', dividend: '₹150.00', paidDate: '10-Jul-2024', installment: '₹45,650.00', receiptNo: 'RCP-11440'),
+    PassbookEntry(slNo: '01', receiptNo: 'RCP-08101', receiptDate: '10-Nov-2023', amount: '₹50,000.00', payType: 'Online'),
+    PassbookEntry(slNo: '02', receiptNo: 'RCP-08422', receiptDate: '12-Dec-2023', amount: '₹43,600.00', payType: 'Cash'),
+    PassbookEntry(slNo: '03', receiptNo: 'RCP-08990', receiptDate: '11-Jan-2024', amount: '₹44,000.00', payType: 'Online'),
+    PassbookEntry(slNo: '04', receiptNo: 'RCP-09312', receiptDate: '10-Feb-2024', amount: '₹44,450.00', payType: 'Cash'),
+    PassbookEntry(slNo: '05', receiptNo: 'RCP-09780', receiptDate: '14-Mar-2024', amount: '₹44,700.00', payType: 'Online'),
+    PassbookEntry(slNo: '06', receiptNo: 'RCP-10145', receiptDate: '10-Apr-2024', amount: '₹44,850.00', payType: 'Cash'),
+    PassbookEntry(slNo: '07', receiptNo: 'RCP-10620', receiptDate: '11-May-2024', amount: '₹45,100.00', payType: 'Online'),
+    PassbookEntry(slNo: '08', receiptNo: 'RCP-11005', receiptDate: '12-Jun-2024', amount: '₹45,380.00', payType: 'Cash'),
+    PassbookEntry(slNo: '09', receiptNo: 'RCP-11440', receiptDate: '10-Jul-2024', amount: '₹45,650.00', payType: 'Online'),
+    PassbookEntry(slNo: '', receiptNo: 'Total', receiptDate: '', amount: '₹4,07,730.00', payType: ''),
   ];
 
   Future<void> _handleDownload() async {
@@ -95,9 +87,9 @@ class _PassbookScreenState extends State<PassbookScreen> {
       final String csvFilePath = '${directory.path}/Chit_Passbook_${widget.chit.groupCode.replaceAll(' ', '_')}.csv';
       final File csvFile = File(csvFilePath);
       final StringBuffer csv = StringBuffer();
-      csv.writeln('SL. NO.,AUCTION DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
+      csv.writeln('S.NO,RECEIPT NO.,RECEIPT DATE,AMOUNT,PAY TYPE');
       for (final e in _entries) {
-        csv.writeln('${e.slNo},${e.auctionDate},${e.discountDiv},${e.dividend},${e.paidDate},${e.installment},${e.receiptNo}');
+        csv.writeln('${e.slNo},${e.receiptNo},${e.receiptDate},"${e.amount}",${e.payType}');
       }
       await csvFile.writeAsString(csv.toString());
 
@@ -152,9 +144,9 @@ class _PassbookScreenState extends State<PassbookScreen> {
       final String shareFilePath = '${tempDir.path}/Passbook_${widget.chit.groupCode.replaceAll(' ', '_')}.csv';
       final File shareFile = File(shareFilePath);
       final StringBuffer csv = StringBuffer();
-      csv.writeln('SL. NO.,AUCTION DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
+      csv.writeln('S.NO,RECEIPT NO.,RECEIPT DATE,AMOUNT,PAY TYPE');
       for (final e in _entries) {
-        csv.writeln('${e.slNo},${e.auctionDate},${e.discountDiv},${e.dividend},${e.paidDate},${e.installment},${e.receiptNo}');
+        csv.writeln('${e.slNo},${e.receiptNo},${e.receiptDate},"${e.amount}",${e.payType}');
       }
       await shareFile.writeAsString(csv.toString());
 
@@ -288,13 +280,11 @@ class _PassbookScreenState extends State<PassbookScreen> {
                   final e = _entries[colIndex];
                   final bool striped = colIndex.isOdd;
                   final cells = [
-                    e.receiptNo,
-                    e.installment,
-                    e.paidDate,
-                    e.dividend,
-                    e.discountDiv,
-                    e.auctionDate,
                     e.slNo,
+                    e.receiptNo,
+                    e.receiptDate,
+                    e.amount,
+                    e.payType,
                   ];
 
                   return Container(

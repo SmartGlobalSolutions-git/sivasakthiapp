@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 
+import '../services/device_location_service.dart';
 import 'otp_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -57,7 +60,14 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onGetOtp() {
+  bool _isLoading = false;
+
+  // Configurable API URL for login/send OTP
+  static const String _apiUrl = 'https://chitsoft.in/wapp/api/chit_api/';
+
+  Future<void> _onGetOtp() async {
+    if (_isLoading) return;
+
     final phone = _phoneController.text.trim();
 
     // 1. If 1 to 9 digits (or less than 10 digits) entered, show SnackBar message
@@ -76,9 +86,8 @@ class _LoginScreenState extends State<LoginScreen> {
               color: Colors.white,
             ),
           ),
-          backgroundColor: const Color(0xFFD92D20),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          backgroundColor: const Color(0xFF000000),
+          behavior: SnackBarBehavior.fixed,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -96,20 +105,110 @@ class _LoginScreenState extends State<LoginScreen> {
       });
       return;
     }
+  
 
-    // 3. Valid 10-digit mobile number -> proceed to OTP screen
     setState(() {
       _phoneError = null;
+      _isLoading = true;
     });
 
-    Navigator.of(context).push(
-      PageRouteBuilder(
-        transitionDuration: Duration.zero,
-        reverseTransitionDuration: Duration.zero,
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            OtpVerificationScreen(phoneNumber: phone),
-      ),
-    );
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+
+      final Map<String, String> formParams = {
+        'cid': '35318938',
+        'type': '6001',
+        'lt': loc['lat'] ?? '123',
+        'ln': loc['lng'] ?? '123',
+        'device_id': deviceId,
+        'mobile': phone,
+      };
+
+      http.Response response = await http.post(
+        Uri.parse(_apiUrl),
+        body: formParams,
+      ).timeout(const Duration(seconds: 10));
+
+      debugPrint('==================================================');
+      debugPrint('LOGIN API REQUEST: $formParams');
+      debugPrint('LOGIN API STATUS CODE: ${response.statusCode}');
+      debugPrint('LOGIN API RESPONSE BODY: ${response.body}');
+      debugPrint('==================================================');
+
+      final Map<String, dynamic> data = jsonDecode(response.body);
+
+      final bool isError = data['error'] == true;
+      final String errorMsg = data['error_msg']?.toString() ??
+          (isError ? 'Something went wrong' : 'Allow to next page');
+
+      if (!mounted) return;
+
+      // Show error_msg in SnackBar message only on error
+      if (isError) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              errorMsg,
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+            backgroundColor: const Color(0xFF000000),
+            behavior: SnackBarBehavior.fixed,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+
+      if (!isError) {
+        final String token = data['token']?.toString() ?? '';
+        final String cusId = data['cus_id']?.toString() ?? '';
+        Navigator.of(context).push(
+          PageRouteBuilder(
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                OtpVerificationScreen(
+              phoneNumber: phone,
+              token: token,
+              cusId: cusId,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('==================================================');
+      debugPrint('LOGIN API EXCEPTION: $e');
+      debugPrint('==================================================');
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please check internet connection or API URL.',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color(0xFF000000),
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -586,7 +685,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     width: double.infinity,
                                     height: 52,
                                     child: ElevatedButton(
-                                      onPressed: _onGetOtp,
+                                      onPressed: _isLoading ? null : _onGetOtp,
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: const Color(
                                           0xFF3C93F4,
@@ -599,14 +698,23 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ),
                                         ),
                                       ),
-                                      child: Text(
-                                        'Get OTP',
-                                        style: GoogleFonts.inter(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.white,
-                                        ),
-                                      ),
+                                      child: _isLoading
+                                          ? const SizedBox(
+                                              width: 22,
+                                              height: 22,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2.5,
+                                              ),
+                                            )
+                                          : Text(
+                                              'Get OTP',
+                                              style: GoogleFonts.inter(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
                                     ),
                                   ),
                                   SizedBox(height: 51 * scaleH),

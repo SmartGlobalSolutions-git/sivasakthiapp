@@ -248,6 +248,25 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                     height: 50.076923,
                     child: ElevatedButton(
                       onPressed: () {
+                        if (!_isAgreed) {
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Please accept the Terms & Conditions to proceed.',
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              backgroundColor: const Color(0xFF000000), 
+                              behavior: SnackBarBehavior.fixed,
+                              duration: const Duration(seconds: 3), 
+                            ),
+                          );
+                          return;
+                        }
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

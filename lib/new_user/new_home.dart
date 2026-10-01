@@ -4,6 +4,9 @@ import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
 import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
 import 'package:siva_sakthi/new_user/new_calculator.dart';
 import 'package:siva_sakthi/new_user/new_menu.dart';
+import 'package:siva_sakthi/setting/about_us.dart';
+import 'package:siva_sakthi/setting/faq_screen.dart';
+import 'package:siva_sakthi/home/notification.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -62,217 +65,217 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showAboutBottomSheet(double scaleW) {
+
+
+  void _showNeedHelpBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: EdgeInsets.symmetric(horizontal: 20 * scaleW, vertical: 24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFCBD5E1),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Image.asset(
-                  'assets/images/about.png',
-                  width: 26 * scaleW,
-                  height: 26 * scaleW,
-                  errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.info_outline, color: Color(0xFF3C93F4)),
-                ),
-                SizedBox(width: 10 * scaleW),
-                Expanded(
-                  child: Text(
-                    'About Siva Saravana Chits (P) LTD',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16 * scaleW,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E2638),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Siva Saravana Chits (P) LTD is a trusted financial institution with over 35 years of glorious service, serving 50,000+ happy customers across 15+ branches.\n\nWe provide 100% government-registered and regulated chit funds that empower individuals and businesses with disciplined savings and hassle-free instant liquidity.',
-              style: GoogleFonts.poppins(
-                fontSize: 12.5 * scaleW,
-                color: const Color(0xFF475569),
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3C93F4),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Close',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14 * scaleW,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showFaqBottomSheet(double scaleW) {
-    final faqs = [
-      {
-        'q': 'What is a Chit Fund?',
-        'a': 'A chit fund is a trusted savings-cum-borrowing mechanism where a fixed group of subscribers contribute a monthly amount, which is auctioned each month as prize money.'
-      },
-      {
-        'q': 'Is my money secure with Siva Sakthi Chits?',
-        'a': 'Yes, 100%. All our schemes are registered under the Central Chit Fund Act 1982 and supervised by the Chit Registrar of the Government.'
-      },
-      {
-        'q': 'How do I join a new Chit Scheme?',
-        'a': 'You can join easily through this app by completing your simple KYC, picking a scheme, and paying your initial installment securely.'
-      },
-    ];
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.75,
-        ),
-        padding: EdgeInsets.symmetric(horizontal: 20 * scaleW, vertical: 24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: SingleChildScrollView(
+      builder: (context) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Drag handle bar
               Center(
                 child: Container(
-                  width: 40,
+                  width: 38,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFCBD5E1),
+                    color: const Color(0xFFE2E8F0),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 12),
+              // Header title and close icon
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/message.png',
-                    width: 24 * scaleW,
-                    height: 24 * scaleW,
-                    errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.help_outline, color: Color(0xFF3C93F4)),
-                  ),
-                  SizedBox(width: 10 * scaleW),
                   Text(
-                    'Frequently Asked Questions',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16 * scaleW,
+                    'Need help?',
+                    style: GoogleFonts.inter(
+                      fontSize: 24,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF1E2638),
+                      color: const Color(0xFF0F172A),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF1F5F9),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        size: 20,
+                        color: Color(0xFF64748B),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              ...faqs.map((faq) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+              const SizedBox(height: 4),
+              Text(
+                "We're here to assist with your chit plans & queries.",
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF64748B),
                 ),
+              ),
+              const SizedBox(height: 20),
+              // Card 1: General Enquiry
+              _buildHelpCard(
+                icon: Icons.call_outlined,
+                title: 'General Enquiry',
+                subtitle: 'Account, group & plan queries',
+                badgeText: '9 AM - 6 PM',
+                badgeBgColor: const Color(0xFFDCFCE7),
+                badgeTextColor: const Color(0xFF15803D),
+                phoneText: '+91 90 4783 4783',
+                onCallTap: () {},
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHelpCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String badgeText,
+    required Color badgeBgColor,
+    required Color badgeTextColor,
+    required String phoneText,
+    required VoidCallback onCallTap,
+  }) {
+    const kBlue = Color(0xFF3C93F4);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: const Color(0xFF334155), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      faq['q']!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13 * scaleW,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1E2638),
+                      title,
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF0F172A),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      faq['a']!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 11.5 * scaleW,
+                      subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w400,
                         color: const Color(0xFF64748B),
-                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
-              )),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF3C93F4),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    'Close',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14 * scaleW,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeBgColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  badgeText,
+                  style: GoogleFonts.inter(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: badgeTextColor,
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
             ],
           ),
-        ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                phoneText,
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF0F172A),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: onCallTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kBlue,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Call',
+                      style: GoogleFonts.inter(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 15,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -435,15 +438,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // 4. Bell notification icon (width: 24, height: 24, top: 40px -> 16px, left: 316px)
                 Positioned(
-                  right: 20 * scaleW, // on 360 screen: 360 - 316 - 24 = 20px
+                  right: 20 * scaleW,
                   top: 16,
                   width: 24 * scaleW,
                   height: 24 * scaleW,
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationScreen()),
+                      );
+                    },
                     child: Image.asset(
                       'assets/images/notification.png',
                       width: 24 * scaleW,
@@ -617,7 +624,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Right: "Contact Us" Pill Button (width: 101, height: 28, border-radius: 180px, bg: #3C93F4)
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: () => showChitEnquiryDialog(context),
+            onTap: () => _showNeedHelpBottomSheet(context),
             child: Container(
               width: 101 * scaleW,
               height: 28 * scaleW,
@@ -1025,28 +1032,18 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 16 * scaleW.clamp(0.85, 1.2),
-            height: 16 * scaleW.clamp(0.85, 1.2),
+            width: 14 * scaleW.clamp(0.85, 1.2),
+            height: 14 * scaleW.clamp(0.85, 1.2),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: isSelected ? Colors.transparent : Colors.white24,
-              border: Border.all(
-                color: isSelected ? Colors.white : Colors.white60,
-                width: 2,
-              ),
+              color: isSelected ? Colors.transparent : const Color(0x66E2E2E2),
+              border: isSelected
+                  ? Border.all(
+                      color: Colors.white,
+                      width: 2.0 * scaleW.clamp(0.85, 1.2),
+                    )
+                  : null,
             ),
-            child: isSelected
-                ? Center(
-              child: Container(
-                width: 6 * scaleW.clamp(0.85, 1.2),
-                height: 6 * scaleW.clamp(0.85, 1.2),
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                ),
-              ),
-            )
-                : null,
           ),
           SizedBox(width: 6 * scaleW.clamp(0.85, 1.1)),
           Text(
@@ -1230,7 +1227,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Box 1: About Siva Saravana Chits (P) LTD
           GestureDetector(
-            onTap: () => _showAboutBottomSheet(scaleW),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AboutUsScreen()),
+              );
+            },
             child: Container(
               width: cardWidth,
               height: cardHeight,
@@ -1318,7 +1320,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // Box 2: Faq
           GestureDetector(
-            onTap: () => _showFaqBottomSheet(scaleW),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const FaqScreen()),
+              );
+            },
             child: Container(
               width: cardWidth,
               height: cardHeight,
@@ -1491,7 +1498,7 @@ class _HomeScreenState extends State<HomeScreen> {
             scaleW: scaleW,
             onTap: () {
               setState(() => _selectedBottomNavIndex = 2);
-              // Navigation disabled as requested
+              _showNeedHelpBottomSheet(context);
             },
           ),
         ],

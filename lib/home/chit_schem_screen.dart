@@ -1,26 +1,89 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'available_chit_screen.dart';
 
 /// Chit Schemes Screen (Tab: Chits Schemes selected)
 /// Figma: width: 360, height: 60 per row, border: 0.5px bottom #ADADAD
-class ChitSchemScreen extends StatelessWidget {
+class ChitSchemScreen extends StatefulWidget {
   const ChitSchemScreen({super.key});
 
-  static const List<Map<String, dynamic>> _schemes = [
-    {'value': '₹ 1,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 2,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 3,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 4,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 5,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 10,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 15,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 20,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 25,00,000', 'members': 20, 'months': 20},
-    {'value': '₹ 50,00,000', 'members': 20, 'months': 20},
-  ];
+  @override
+  State<ChitSchemScreen> createState() => _ChitSchemScreenState();
+}
+
+class _ChitSchemScreenState extends State<ChitSchemScreen> {
+  bool _isLoading = true;
+  String? _errorMessage;
+  List<dynamic> _schemes = [];
+
+  static const String _apiUrl = 'https://chitsoft.in/wapp/api/chit_api/';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSchemes();
+  }
+
+  Future<void> _fetchSchemes() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final String deviceId = await DeviceLocationService.getDeviceId();
+    final Map<String, String> loc = await DeviceLocationService.getLocation();
+
+    final Map<String, String> formParams = {
+      'cid': '35318938',
+      'type': '6003',
+      'lt': loc['lat'] ?? '123',
+      'ln': loc['lng'] ?? '123',
+      'device_id': deviceId.isNotEmpty ? deviceId : '123',
+      'token': 'aiwg7ljinjgxw26r',
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(_apiUrl),
+        body: formParams,
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        setState(() {
+          _schemes = data['chit'] ?? [];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = 'Failed to load schemes';
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Network error';
+        _isLoading = false;
+      });
+    }
+  }
+
+  String _formatAmount(dynamic val) {
+    if (val == null) return '0';
+    final numVal = num.tryParse(val.toString()) ?? 0;
+    final str = numVal.toInt().toString();
+    if (str.length <= 3) return str;
+    final lastThree = str.substring(str.length - 3);
+    final otherNumbers = str.substring(0, str.length - 3);
+    final formatted = otherNumbers.replaceAllMapped(
+        RegExp(r'(\d+?)(?=(\d\d)+$)'), (Match m) => '${m[1]},');
+    return '$formatted,$lastThree';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -279,98 +342,102 @@ class ChitSchemScreen extends StatelessWidget {
             Expanded(
               child: Container(
                 color: const Color(0xFFF4F5F7),
-                child: ListView.separated(
-                  physics: const BouncingScrollPhysics(),
-                  padding: EdgeInsets.zero,
-                  itemCount: _schemes.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 3.0),
-                  itemBuilder: (context, index) {
-                    final item = _schemes[index];
-                    return Container(
-                      height: 60.0,
-                      color: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Row(
-                        children: [
-                          // Chit Value
-                          Expanded(
-                            flex: 3,
-                            child: Text(
-                              item['value'] as String,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                height: 1.0,
-                                letterSpacing: 0,
-                                color: const Color(0xFF3C93F4),
-                              ),
-                            ),
-                          ),
-                          // Members
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              '${item['members']}',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xFF344054),
-                              ),
-                            ),
-                          ),
-                          // Months
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              '${item['months']}',
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xFF344054),
-                              ),
-                            ),
-                          ),
-                          // View icon
-                          SizedBox(
-                            width: 48,
-                            child: Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          SubscriptionPlanScreen(
-                                        investmentAmount: (item['value']
-                                                as String)
-                                            .replaceAll('₹', '')
-                                            .trim(),
-                                        durationMonths:
-                                            '${item['months']}',
+                child: _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _errorMessage != null
+                        ? Center(child: Text(_errorMessage!))
+                        : ListView.separated(
+                            physics: const BouncingScrollPhysics(),
+                            padding: EdgeInsets.zero,
+                            itemCount: _schemes.length,
+                            separatorBuilder: (context, index) => const SizedBox(height: 3.0),
+                            itemBuilder: (context, index) {
+                              final item = _schemes[index];
+                              final chitValue = _formatAmount(item['ch_value']);
+                              final nom = item['nom']?.toString() ?? '0';
+
+                              return Container(
+                                height: 60.0,
+                                color: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                child: Row(
+                                  children: [
+                                    // Chit Value
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        '₹ $chitValue',
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          height: 1.0,
+                                          letterSpacing: 0,
+                                          color: const Color(0xFF3C93F4),
+                                        ),
                                       ),
                                     ),
-                                  );
-                                },
-                                child: Image.asset(
-                                  'assets/icons/eye.png',
-                                  width: 22,
-                                  height: 14,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    Icons.visibility_outlined,
-                                    size: 22,
-                                    color: Color(0xFF101828),
-                                  ),
+                                    // Members
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        nom,
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFF344054),
+                                        ),
+                                      ),
+                                    ),
+                                    // Months
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        nom,
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          color: const Color(0xFF344054),
+                                        ),
+                                      ),
+                                    ),
+                                    // View icon
+                                    SizedBox(
+                                      width: 48,
+                                      child: Center(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.of(context).push(
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    SubscriptionPlanScreen(
+                                                  investmentAmount: item['ch_value']?.toString() ?? '0',
+                                                  durationMonths: nom,
+                                                  planId: item['id']?.toString() ?? '0',
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                          child: Image.asset(
+                                            'assets/icons/eye.png',
+                                            width: 22,
+                                            height: 14,
+                                            fit: BoxFit.contain,
+                                            errorBuilder: (_, _, _) => const Icon(
+                                              Icons.visibility_outlined,
+                                              size: 22,
+                                              color: Color(0xFF101828),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ),
-                            ),
+                              );
+                            },
                           ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
               ),
             ),
           ],

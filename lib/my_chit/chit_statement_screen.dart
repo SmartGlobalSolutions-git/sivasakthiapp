@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:path_provider/path_provider.dart';
@@ -6,23 +7,23 @@ import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/home/notification.dart';
 import 'chit_model.dart';
 
-class PassbookEntry {
+class StatementEntry {
   final String slNo;
-  final String auctionDate;
-  final String discountDiv;
+  final String date;
+  final String type;
   final String dividend;
-  final String paidDate;
-  final String installment;
-  final String receiptNo;
+  final String debit;
+  final String credit;
+  final String balance;
 
-  const PassbookEntry({
+  const StatementEntry({
     required this.slNo,
-    required this.auctionDate,
-    required this.discountDiv,
+    required this.date,
+    required this.type,
     required this.dividend,
-    required this.paidDate,
-    required this.installment,
-    required this.receiptNo,
+    required this.debit,
+    required this.credit,
+    required this.balance,
   });
 }
 
@@ -38,28 +39,27 @@ class ChitStatementScreen extends StatefulWidget {
 class _ChitStatementScreenState extends State<ChitStatementScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kGold = Color(0xFF3C93F4);
-  static const Color kHeaderBlue = Color(0xFF193FBD);
-  static const Color kHeaderDivider = Color(0xFF3C93F4);
+  static const Color kHeaderBlue = Color(0xFF3C93F4);
+  static const Color kHeaderDivider = Colors.white24;
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);
   static const Color kStripe = Color(0x80E5E5E5); // #E5E5E5 @ 50%
   static const double _borderWidth = 0.84;
 
   static const List<String> _labels = [
-    'RECEIPT NO.',
-    'INSTALLMENT (₹)',
-    'PAID DATE',
-    'DIVIDENT',
-    'DISCOUNT / DIV.',
-    'AUCTION DATE',
-    'SL. NO.',
+    'BALANCE',
+    'CREDIT',
+    'DEBIT',
+    'DIVIDEND',
+    'TYPE',
+    'DATE',
+    'S.NO',
   ];
-  static const List<double> _rowHeights = [90, 120, 93, 62, 114, 103, 55];
+  static const List<double> _rowHeights = [85, 95, 95, 80, 85, 120, 58];
 
-  // Figma: INSTALLMENT and SL. NO. rows are bold (700), others regular
   static const List<FontWeight> _rowWeights = [
     FontWeight.w400,
-    FontWeight.w700,
+    FontWeight.w400,
     FontWeight.w400,
     FontWeight.w400,
     FontWeight.w400,
@@ -67,21 +67,19 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
     FontWeight.w700,
   ];
 
-  static const double _labelColWidth = 37.47;
-  static const double _dataColWidth = 35.8;
+  static const double _labelColWidth = 42.0;
+  static const double _dataColWidth = 41.9;
 
   bool _isDownloading = false;
 
-  final List<PassbookEntry> _entries = const [
-    PassbookEntry(slNo: '01', auctionDate: '10-Nov-2023', discountDiv: '₹ -', dividend: '₹ -', paidDate: '10-Nov-2023', installment: '₹50,000.00', receiptNo: 'RCP-08101'),
-    PassbookEntry(slNo: '02', auctionDate: '10-Dec-2023', discountDiv: '₹6,250.00', dividend: '₹150.00', paidDate: '12-Dec-2023', installment: '₹43,600.00', receiptNo: 'RCP-08422'),
-    PassbookEntry(slNo: '03', auctionDate: '10-Jan-2024', discountDiv: '₹5,800.00', dividend: '₹200.00', paidDate: '11-Jan-2024', installment: '₹44,000.00', receiptNo: 'RCP-08990'),
-    PassbookEntry(slNo: '04', auctionDate: '10-Feb-2024', discountDiv: '₹5,400.00', dividend: '₹150.00', paidDate: '10-Feb-2024', installment: '₹44,450.00', receiptNo: 'RCP-09312'),
-    PassbookEntry(slNo: '05', auctionDate: '10-Mar-2024', discountDiv: '₹5,200.00', dividend: '₹100.00', paidDate: '14-Mar-2024', installment: '₹44,700.00', receiptNo: 'RCP-09780'),
-    PassbookEntry(slNo: '06', auctionDate: '10-Apr-2024', discountDiv: '₹5,000.00', dividend: '₹150.00', paidDate: '10-Apr-2024', installment: '₹44,850.00', receiptNo: 'RCP-10145'),
-    PassbookEntry(slNo: '07', auctionDate: '10-May-2024', discountDiv: '₹4,800.00', dividend: '₹100.00', paidDate: '11-May-2024', installment: '₹45,100.00', receiptNo: 'RCP-10620'),
-    PassbookEntry(slNo: '08', auctionDate: '10-Jun-2024', discountDiv: '₹4,500.00', dividend: '₹120.00', paidDate: '12-Jun-2024', installment: '₹45,380.00', receiptNo: 'RCP-11005'),
-    PassbookEntry(slNo: '09', auctionDate: '10-Jul-2024', discountDiv: '₹4,200.00', dividend: '₹150.00', paidDate: '10-Jul-2024', installment: '₹45,650.00', receiptNo: 'RCP-11440'),
+  final List<StatementEntry> _entries = const [
+    StatementEntry(slNo: '1', date: '15-02-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
+    StatementEntry(slNo: '2', date: '20-03-2024', type: 'Debit', dividend: '-', debit: '₹10,000', credit: '-', balance: '₹0'),
+    StatementEntry(slNo: '3', date: '20-03-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
+    StatementEntry(slNo: '4', date: '20-04-2024', type: 'Debit', dividend: '-', debit: '₹10,000', credit: '-', balance: '₹0'),
+    StatementEntry(slNo: '5', date: '20-04-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
+    StatementEntry(slNo: '6', date: '20-05-2024', type: 'Debit', dividend: '-', debit: '₹10,000', credit: '-', balance: '₹0'),
+    StatementEntry(slNo: '7', date: '20-05-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
   ];
 
   Future<void> _handleDownload() async {
@@ -95,9 +93,9 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
       final String csvFilePath = '${directory.path}/Chit_Statement_${widget.chit.groupCode.replaceAll(' ', '_')}.csv';
       final File csvFile = File(csvFilePath);
       final StringBuffer csv = StringBuffer();
-      csv.writeln('SL. NO.,AUCTION DATE,DISCOUNT / DIV.,DIVIDENT,PAID DATE,INSTALLMENT (₹),RECEIPT NO.');
+      csv.writeln('S.NO,DATE,TYPE,DIVIDEND,DEBIT,CREDIT,BALANCE');
       for (final e in _entries) {
-        csv.writeln('${e.slNo},${e.auctionDate},${e.discountDiv},${e.dividend},${e.paidDate},${e.installment},${e.receiptNo}');
+        csv.writeln('${e.slNo},${e.date},${e.type},${e.dividend},${e.debit},${e.credit},${e.balance}');
       }
       await csvFile.writeAsString(csv.toString());
 
@@ -241,7 +239,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.only(left: 16, top: 16, bottom: 16),
+                padding: const EdgeInsets.all(16),
                 child: _buildPassbookTable(),
               ),
             ),
@@ -312,12 +310,12 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                   final e = _entries[colIndex];
                   final bool striped = colIndex.isOdd;
                   final cells = [
-                    e.receiptNo,
-                    e.installment,
-                    e.paidDate,
+                    e.balance,
+                    e.credit,
+                    e.debit,
                     e.dividend,
-                    e.discountDiv,
-                    e.auctionDate,
+                    e.type,
+                    e.date,
                     e.slNo,
                   ];
 
@@ -334,10 +332,37 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                     ),
                     child: Column(
                       children: List.generate(cells.length, (rowIndex) {
-                        return Container(
-                          height: _rowHeights[rowIndex],
-                          alignment: Alignment.center,
-                          child: RotatedBox(
+                        Widget content;
+                        if (rowIndex == 4) {
+                          // TYPE badge
+                          bool isCredit = cells[rowIndex] == 'Credit';
+                          content = RotatedBox(
+                            quarterTurns: 3,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: isCredit ? const Color(0xFFE6F4EA) : const Color(0xFFFCE8E8),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                cells[rowIndex],
+                                style: GoogleFonts.inter(
+                                  fontSize: 8.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: isCredit ? const Color(0xFF12B76A) : const Color(0xFFF04438),
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          Color textColor = kValueText;
+                          if (rowIndex == 1 && cells[rowIndex] != '-') {
+                            textColor = const Color(0xFF12B76A); // CREDIT
+                          } else if (rowIndex == 2 && cells[rowIndex] != '-') {
+                            textColor = const Color(0xFFF04438); // DEBIT
+                          }
+
+                          content = RotatedBox(
                             quarterTurns: 3,
                             child: Text(
                               cells[rowIndex],
@@ -347,10 +372,16 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                                 fontSize: 10.06,
                                 height: 13.41 / 10.06,
                                 fontWeight: _rowWeights[rowIndex],
-                                color: kValueText,
+                                color: textColor,
                               ),
                             ),
-                          ),
+                          );
+                        }
+
+                        return Container(
+                          height: _rowHeights[rowIndex],
+                          alignment: Alignment.center,
+                          child: content,
                         );
                       }),
                     ),

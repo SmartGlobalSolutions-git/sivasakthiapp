@@ -122,7 +122,7 @@ class ChitsDetailScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PassbookScreen(chit: chitData),
+                          builder: (context) => ChitPassbookScreen(chit: chitData),
                         ),
                       );
                     },
