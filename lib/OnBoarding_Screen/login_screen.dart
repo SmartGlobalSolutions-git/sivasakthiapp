@@ -100,9 +100,25 @@ class _LoginScreenState extends State<LoginScreen> {
         !RegExp(r'^(\d)\1{9}$').hasMatch(phone);
 
     if (!isValidMobile) {
-      setState(() {
-        _phoneError = 'Please enter a valid mobile number';
-      });
+      if (_phoneError != null) {
+        setState(() => _phoneError = null);
+      }
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Please enter a valid mobile number',
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+          backgroundColor: const Color(0xFF000000),
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 2),
+        ),
+      );
       return;
     }
   
@@ -360,9 +376,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   // Phone Input Field
                                   Row(
                                     children: [
-                                      // Country code box (height: 46, radius: 8, border: #D2D2D2, bg: #FBFBFB)
+                                      // Country code box
                                       Container(
-                                        height: 46,
+                                        height: 42,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                         ),
@@ -400,255 +416,51 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                       const SizedBox(width: 10),
 
-                                      // Number input box (height: 46, radius: 8, border: #D2D2D2, bg: #FBFBFB)
+                                      // Number input box
                                       Expanded(
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            _phoneFocusNode.requestFocus();
-                                            if (_phoneController
-                                                    .selection
-                                                    .baseOffset <
-                                                0) {
-                                              _phoneController.selection =
-                                                  TextSelection.collapsed(
-                                                    offset: _phoneController
-                                                        .text
-                                                        .length,
-                                                  );
-                                            }
-                                          },
-                                          child: Container(
-                                            height: 46,
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 10,
+                                        child: Container(
+                                          height: 42,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                          ),
+                                          alignment: Alignment.center,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFFBFBFB),
+                                            borderRadius: BorderRadius.circular(8),
+                                            border: Border.all(
+                                              color: _phoneError != null
+                                                  ? const Color(0xFFD92D20)
+                                                  : (_phoneFocusNode.hasFocus
+                                                        ? const Color(0xFF3C93F4)
+                                                        : const Color(0xFFD2D2D2)),
+                                              width: 1.0,
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: const Color(
-                                                0xFFFBFBFB,
-                                              ), // #FBFBFB
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    8,
-                                                  ), // radius: 8px
-                                              border: Border.all(
-                                                color: _phoneError != null
-                                                    ? const Color(0xFFD92D20)
-                                                    : (_phoneFocusNode.hasFocus
-                                                          ? const Color(
-                                                              0xFF3C93F4,
-                                                            )
-                                                          : const Color(
-                                                              0xFFD2D2D2,
-                                                            )), // border: 1px solid #D2D2D2
-                                                width: 1.0,
+                                          ),
+                                          child: TextField(
+                                            controller: _phoneController,
+                                            focusNode: _phoneFocusNode,
+                                            keyboardType: TextInputType.phone,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF101828),
+                                              letterSpacing: 1.5,
+                                            ),
+                                            inputFormatters: [
+                                              FilteringTextInputFormatter.digitsOnly,
+                                              LengthLimitingTextInputFormatter(10),
+                                            ],
+                                            decoration: InputDecoration(
+                                              border: InputBorder.none,
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.zero,
+                                              hintText: 'Enter Mobile Number',
+                                              hintStyle: GoogleFonts.inter(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w400,
+                                                color: const Color(0xFF9CA3AF),
+                                                letterSpacing: 0,
                                               ),
-                                            ),
-                                            child: Stack(
-                                              alignment: Alignment.centerLeft,
-                                              children: [
-                                                // 10 underscore slots: 2 - 4 - 4 grouping with lengthened spacing
-                                                FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: List.generate(10, (
-                                                      index,
-                                                    ) {
-                                                      final text =
-                                                          _phoneController.text;
-                                                      final hasChar =
-                                                          index < text.length;
-                                                      final char = hasChar
-                                                          ? text[index]
-                                                          : '';
-                                                      // Group spacing: 2 dashes, wide space, 4 dashes, wide space, 4 dashes
-                                                      final isGroupBreak =
-                                                          (index == 1 ||
-                                                          index == 5);
-
-                                                      // Calculate active cursor position
-                                                      final rawOffset =
-                                                          _phoneController
-                                                              .selection
-                                                              .baseOffset;
-                                                      final cursorPos =
-                                                          (rawOffset >= 0 &&
-                                                              rawOffset <=
-                                                                  text.length)
-                                                          ? rawOffset
-                                                          : text.length;
-
-                                                      final showCursorBefore =
-                                                          _phoneFocusNode
-                                                              .hasFocus &&
-                                                          _cursorVisible &&
-                                                          (cursorPos == index);
-
-                                                      final showCursorAfter =
-                                                          _phoneFocusNode
-                                                              .hasFocus &&
-                                                          _cursorVisible &&
-                                                          (cursorPos == 10 &&
-                                                              index == 9);
-
-                                                      Widget buildSlotChild() {
-                                                        final charWidget =
-                                                            hasChar
-                                                            ? Text(
-                                                                char,
-                                                                style: GoogleFonts.inter(
-                                                                  fontSize: 18,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w600,
-                                                                  color: const Color(
-                                                                    0xFF101828,
-                                                                  ),
-                                                                ),
-                                                              )
-                                                            : null;
-
-                                                        final cursorLine =
-                                                            Container(
-                                                              width: 1.5,
-                                                              height: 20,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF3C93F4,
-                                                                  ),
-                                                            );
-
-                                                        if (showCursorBefore) {
-                                                          if (hasChar) {
-                                                            return Row(
-                                                              mainAxisSize:
-                                                                  MainAxisSize
-                                                                      .min,
-                                                              children: [
-                                                                cursorLine,
-                                                                charWidget!,
-                                                              ],
-                                                            );
-                                                          } else {
-                                                            return cursorLine;
-                                                          }
-                                                        } else if (showCursorAfter) {
-                                                          return Row(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              charWidget!,
-                                                              cursorLine,
-                                                            ],
-                                                          );
-                                                        } else {
-                                                          return charWidget ??
-                                                              const SizedBox.shrink();
-                                                        }
-                                                      }
-
-                                                      return GestureDetector(
-                                                        behavior:
-                                                            HitTestBehavior
-                                                                .opaque,
-                                                        onTap: () {
-                                                          _phoneFocusNode
-                                                              .requestFocus();
-                                                          final currentText =
-                                                              _phoneController
-                                                                  .text;
-                                                          if (index <
-                                                              currentText
-                                                                  .length) {
-                                                            _phoneController
-                                                                    .selection =
-                                                                TextSelection.collapsed(
-                                                                  offset:
-                                                                      index + 1,
-                                                                );
-                                                          } else {
-                                                            _phoneController
-                                                                    .selection =
-                                                                TextSelection.collapsed(
-                                                                  offset:
-                                                                      currentText
-                                                                          .length,
-                                                                );
-                                                          }
-                                                        },
-                                                        child: Padding(
-                                                          padding:
-                                                              EdgeInsets.only(
-                                                                right:
-                                                                    isGroupBreak
-                                                                    ? 16.0
-                                                                    : (index < 9
-                                                                          ? 5.0
-                                                                          : 0.0),
-                                                              ),
-                                                          child: Column(
-                                                            mainAxisSize:
-                                                                MainAxisSize
-                                                                    .min,
-                                                            children: [
-                                                              SizedBox(
-                                                                height: 24,
-                                                                child: Center(
-                                                                  child:
-                                                                      buildSlotChild(),
-                                                                ),
-                                                              ),
-                                                              const SizedBox(
-                                                                height: 2,
-                                                              ),
-                                                              // width: 15, stroke: 1.5, color: #000000
-                                                              Container(
-                                                                width: 15,
-                                                                height: 1.5,
-                                                                decoration: BoxDecoration(
-                                                                  color: const Color(
-                                                                    0xFF000000,
-                                                                  ),
-                                                                  borderRadius:
-                                                                      BorderRadius.circular(
-                                                                        0.5,
-                                                                      ),
-                                                                ),
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      );
-                                                    }),
-                                                  ),
-                                                ),
-
-                                                // Transparent TextField overlay wrapped in IgnorePointer so taps hit individual slots
-                                                IgnorePointer(
-                                                  child: Opacity(
-                                                    opacity: 0.0,
-                                                    child: TextField(
-                                                      controller:
-                                                          _phoneController,
-                                                      focusNode:
-                                                          _phoneFocusNode,
-                                                      keyboardType:
-                                                          TextInputType.phone,
-                                                      inputFormatters: [
-                                                        FilteringTextInputFormatter
-                                                            .digitsOnly,
-                                                        LengthLimitingTextInputFormatter(
-                                                          10,
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
                                             ),
                                           ),
                                         ),

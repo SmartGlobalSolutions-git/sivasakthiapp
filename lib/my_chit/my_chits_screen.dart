@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'package:siva_sakthi/bottom_navbar.dart';
 import 'package:siva_sakthi/my_chit/chit_detail_screen.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/home/notification.dart';
+import 'package:siva_sakthi/home/home.dart';
 
 enum ChitPrizeStatus { nonPrized, prized }
 
 class ChitItem {
   final String name;
+  final String chitId;
   final String groupCode;
-  final String chitValue; 
+  final String chitValue;
   final String startDate;
   final String endDate;
   final ChitPrizeStatus prizeStatus;
@@ -21,6 +26,7 @@ class ChitItem {
 
   const ChitItem({
     required this.name,
+    required this.chitId,
     required this.groupCode,
     required this.chitValue,
     required this.startDate,
@@ -33,12 +39,17 @@ class ChitItem {
   });
 }
 
-class MyChitsScreen extends StatelessWidget {
+class MyChitsScreen extends StatefulWidget {
   /// Set false if your app already has a bottom nav shell.
   final bool showBottomNav;
 
   const MyChitsScreen({super.key, this.showBottomNav = true});
 
+  @override
+  State<MyChitsScreen> createState() => _MyChitsScreenState();
+}
+
+class _MyChitsScreenState extends State<MyChitsScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kBlue = Color(0xFF3C93F4);
   static const Color kLabel = Color(0xFF475569);
@@ -51,68 +62,129 @@ class MyChitsScreen extends StatelessWidget {
   static const String kGroupBlue = 'assets/chits/ic_group_blue.png';
   static const String kArrowRight = 'assets/chits/ic_arrow_right_blue.png';
 
-  // TODO: replace with API data
-  static const List<ChitItem> _chits = [
-    ChitItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      chitValue: '₹ 10,00,000',
-      startDate: '01 Jan 2024',
-      endDate: '31 Aug 2025',
-      prizeStatus: ChitPrizeStatus.nonPrized,
-      totalDividend: '₹ 1,00,000',
-      runningBalance: '₹ 5,00,000',
-      completedMonths: 6,
-      totalMonths: 20,
-    ),
-    ChitItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      chitValue: '₹ 10,00,000',
-      startDate: '01 Jan 2024',
-      endDate: '31 Aug 2025',
-      prizeStatus: ChitPrizeStatus.prized,
-      totalDividend: '₹ 1,00,000',
-      runningBalance: '₹ 5,00,000',
-      completedMonths: 6,
-      totalMonths: 20,
-    ),
-    ChitItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      chitValue: '₹ 10,00,000',
-      startDate: '01 Jan 2024',
-      endDate: '31 Aug 2025',
-      prizeStatus: ChitPrizeStatus.nonPrized,
-      totalDividend: '₹ 1,00,000',
-      runningBalance: '₹ 5,00,000',
-      completedMonths: 6,
-      totalMonths: 20,
-    ),
-    ChitItem(
-      name: 'Chandru',
-      groupCode: '10 - L',
-      chitValue: '₹ 10,00,000',
-      startDate: '01 Jan 2024',
-      endDate: '31 Aug 2025',
-      prizeStatus: ChitPrizeStatus.nonPrized,
-      totalDividend: '₹ 1,00,000',
-      runningBalance: '₹ 5,00,000',
-      completedMonths: 6,
-      totalMonths: 20,
-    ),
-  ];
+  List<ChitItem> _chits = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchChits();
+  }
+
+  Future<void> _fetchChits() async {
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6004',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'cus_id': '1',
+        },
+      );
+      if (response.statusCode == 200) {
+        debugPrint('MY CHITS API RESPONSE: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['plans'] != null) {
+          final List<dynamic> plansJson = data['plans'];
+          final List<ChitItem> loadedChits = plansJson.map((jsonItem) {
+            final name = jsonItem['name']?.toString() ?? '';
+            final chitId = jsonItem['chit_sno']?.toString() ?? '';
+
+            final groupCode = jsonItem['gname']?.toString() ?? '';
+            final chitValueStr = jsonItem['ch_value']?.toString() ?? '0';
+            final startDate = jsonItem['cd_date']?.toString() ?? '';
+            final endDate = jsonItem['td_date']?.toString() ?? '';
+
+            final prizeStatusStr = jsonItem['prize_status']?.toString() ?? '';
+            final prizeStatus = prizeStatusStr.toLowerCase() == 'prized'
+                ? ChitPrizeStatus.prized
+                : ChitPrizeStatus.nonPrized;
+
+            final totalDividend = jsonItem['total_divident']?.toString() ?? '0';
+            final totalDue = jsonItem['total_due_amt']?.toString() ?? '0';
+
+            final completedMonths =
+                int.tryParse(jsonItem['months_elapsed']?.toString() ?? '0') ??
+                0;
+            final totalMonths =
+                int.tryParse(jsonItem['total_months']?.toString() ?? '0') ?? 0;
+
+            return ChitItem(
+              name: name,
+              chitId: chitId,
+              groupCode: groupCode,
+              chitValue: '₹ $chitValueStr',
+              startDate: _formatDate(startDate),
+              endDate: _formatDate(endDate),
+              prizeStatus: prizeStatus,
+              totalDividend: '₹ $totalDividend',
+              runningBalance: '₹ $totalDue',
+              completedMonths: completedMonths,
+              totalMonths: totalMonths,
+            );
+          }).toList();
+
+          if (mounted) {
+            setState(() {
+              _chits = loadedChits;
+              _isLoading = false;
+            });
+          }
+        } else {
+          if (mounted) setState(() => _isLoading = false);
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error fetching chits: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _formatDate(String dateStr) {
+    if (dateStr.isEmpty || dateStr == '0000-00-00') return '';
+    try {
+      final DateTime d = DateTime.parse(dateStr);
+      final months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return '${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}';
+    } catch (e) {
+      return dateStr;
+    }
+  }
 
   // ---------------- helpers ----------------
-  TextStyle _t(double size, FontWeight w, Color c,
-      {double? height, double? spacing}) =>
-      GoogleFonts.inter(
-        fontSize: size,
-        fontWeight: w,
-        color: c,
-        height: height ?? 1.0,
-        letterSpacing: spacing,
-      );
+  TextStyle _t(
+    double size,
+    FontWeight w,
+    Color c, {
+    double? height,
+    double? spacing,
+  }) => GoogleFonts.inter(
+    fontSize: size,
+    fontWeight: w,
+    color: c,
+    height: height ?? 1.0,
+    letterSpacing: spacing,
+  );
 
   /// PNG icon with Material fallback (so app doesn't crash before assets are added)
   Widget _icon(String asset, double size, IconData fallback, {Color? color}) {
@@ -121,7 +193,8 @@ class MyChitsScreen extends StatelessWidget {
       width: size,
       height: size,
       fit: BoxFit.contain,
-      errorBuilder: (c, e, s) => Icon(fallback, size: size, color: color ?? Colors.black87),
+      errorBuilder: (c, e, s) =>
+          Icon(fallback, size: size, color: color ?? Colors.black87),
     );
   }
 
@@ -130,16 +203,23 @@ class MyChitsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBg,
       appBar: _buildAppBar(context),
-      body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 11, 16, 24),
-        itemCount: _chits.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 18),
-        itemBuilder: (context, i) => _buildCard(context, _chits[i]),
-      ),
-      bottomNavigationBar: MainIconeFrames(
-        currentIndex: 1,
-        onTabSelected: (index) => MainIconeFrames.navigateToTab(context, 1, index),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _chits.isEmpty
+          ? const Center(child: Text("No chits found"))
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 11, 16, 24),
+              itemCount: _chits.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 18),
+              itemBuilder: (context, i) => _buildCard(context, _chits[i]),
+            ),
+      bottomNavigationBar: widget.showBottomNav
+          ? MainIconeFrames(
+              currentIndex: 1,
+              onTabSelected: (index) =>
+                  MainIconeFrames.navigateToTab(context, 1, index),
+            )
+          : const SizedBox.shrink(),
     );
   }
 
@@ -154,7 +234,13 @@ class MyChitsScreen extends StatelessWidget {
       titleSpacing: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Color(0xFF1E2638), size: 22),
-        onPressed: () => Navigator.of(context).maybePop(),
+        onPressed: () {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const SivaSakthiHomeScreen()),
+            (route) => false,
+          );
+        },
       ),
       title: Text(
         'My Chits',
@@ -188,8 +274,11 @@ class MyChitsScreen extends StatelessWidget {
                   width: 14,
                   height: 14,
                   fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.headset_mic, size: 14, color: Color(0xFF3C93F4)),
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.headset_mic,
+                    size: 14,
+                    color: Color(0xFF3C93F4),
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -217,7 +306,9 @@ class MyChitsScreen extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const NotificationScreen()),
+              MaterialPageRoute(
+                builder: (context) => const NotificationScreen(),
+              ),
             );
           },
         ),
@@ -263,7 +354,11 @@ class MyChitsScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: kBlue, width: 0.6),
         boxShadow: const [
-          BoxShadow(color: Color(0x40000000), offset: Offset(0, 4), blurRadius: 4),
+          BoxShadow(
+            color: Color(0x40000000),
+            offset: Offset(0, 4),
+            blurRadius: 4,
+          ),
         ],
       ),
       child: Stack(
@@ -291,7 +386,12 @@ class MyChitsScreen extends StatelessWidget {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: _icon(kGroupBlue, 16, Icons.groups, color: kBlue),
+                        child: _icon(
+                          kGroupBlue,
+                          16,
+                          Icons.groups,
+                          color: kBlue,
+                        ),
                       ),
                     ),
                   ),
@@ -307,8 +407,10 @@ class MyChitsScreen extends StatelessWidget {
                         color: kBlue,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text('Active',
-                          style: _t(9.5, FontWeight.w500, Colors.white)),
+                      child: Text(
+                        'Active',
+                        style: _t(9.5, FontWeight.w500, Colors.white),
+                      ),
                     ),
                   ),
                 ],
@@ -323,22 +425,44 @@ class MyChitsScreen extends StatelessWidget {
             height: 1,
             child: ColoredBox(color: Color(0xFFE5E7EB)),
           ),
-          // Name + group code
+          // Name + Chit ID + group code
           Positioned(
             left: 71,
-            top: 11,
-            child: Text(c.name,
-                style: _t(12, FontWeight.w500, Colors.black, spacing: -0.5)),
-          ),
-          Positioned(
-            left: 71,
-            top: 25,
-            child: Row(
+            top: 7,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('GROUP CODE',
-                    style: _t(11, FontWeight.w500, kLabel, spacing: 0.55)),
-                const SizedBox(width: 6),
-                Text(c.groupCode, style: _t(16, FontWeight.w700, kNavy)),
+                Text(
+                  c.name,
+                  style: _t(12, FontWeight.w500, Colors.black, spacing: -0.5),
+                ),
+                if (c.chitId.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        Text(
+                          'CHIT ID -',
+                          style: _t(10, FontWeight.w500, kLabel, spacing: 0.55),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(c.chitId, style: _t(11, FontWeight.w600, kNavy)),
+                      ],
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    children: [
+                      Text(
+                        'GROUP CODE',
+                        style: _t(10, FontWeight.w500, kLabel, spacing: 0.55),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(c.groupCode, style: _t(11, FontWeight.w600, kNavy)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -347,10 +471,18 @@ class MyChitsScreen extends StatelessWidget {
             right: 7,
             top: 8,
             child: prized
-                ? _badge('Prized', const Color(0xFFDDE3FF),
-                const Color(0xFF2D3A8C), const Color(0xFF1E2A78))
-                : _badge('Non-prized', const Color(0xFFFFFAE6),
-                const Color(0xFFD9AB07), const Color(0xFFD9AB07)),
+                ? _badge(
+                    'Prized',
+                    const Color(0xFFDDE3FF),
+                    const Color(0xFF2D3A8C),
+                    const Color(0xFF1E2A78),
+                  )
+                : _badge(
+                    'Non-prized',
+                    const Color(0xFFFFFAE6),
+                    const Color(0xFFD9AB07),
+                    const Color(0xFFD9AB07),
+                  ),
           ),
           // Chit Value / Start Date / End Date
           Positioned(
@@ -365,7 +497,12 @@ class MyChitsScreen extends StatelessWidget {
                   child: _gridCol(
                     'Chit Value',
                     c.chitValue,
-                    _t(14, FontWeight.w700, const Color(0xFF2545C4), height: 20 / 14),
+                    _t(
+                      14,
+                      FontWeight.w700,
+                      const Color(0xFF2545C4),
+                      height: 20 / 14,
+                    ),
                     2.5,
                   ),
                 ),
@@ -373,7 +510,9 @@ class MyChitsScreen extends StatelessWidget {
                   width: 108,
                   child: _gridCol('Start Date', c.startDate, _dateStyle, 4.5),
                 ),
-                Expanded(child: _gridCol('End Date', c.endDate, _dateStyle, 4.5)),
+                Expanded(
+                  child: _gridCol('End Date', c.endDate, _dateStyle, 4.5),
+                ),
               ],
             ),
           ),
@@ -403,7 +542,12 @@ class MyChitsScreen extends StatelessWidget {
 
   TextStyle get _dateStyle => _t(10, FontWeight.w600, kNavy, height: 14 / 10);
 
-  Widget _gridCol(String label, String value, TextStyle valueStyle, double gap) {
+  Widget _gridCol(
+    String label,
+    String value,
+    TextStyle valueStyle,
+    double gap,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -413,5 +557,4 @@ class MyChitsScreen extends StatelessWidget {
       ],
     );
   }
-
 }

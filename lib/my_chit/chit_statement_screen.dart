@@ -2,9 +2,12 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/home/notification.dart';
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'chit_model.dart';
 
 class StatementEntry {
@@ -72,15 +75,78 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
 
   bool _isDownloading = false;
 
-  final List<StatementEntry> _entries = const [
-    StatementEntry(slNo: '1', date: '15-02-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
-    StatementEntry(slNo: '2', date: '20-03-2024', type: 'Debit', dividend: '-', debit: '₹10,000', credit: '-', balance: '₹0'),
-    StatementEntry(slNo: '3', date: '20-03-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
-    StatementEntry(slNo: '4', date: '20-04-2024', type: 'Debit', dividend: '-', debit: '₹10,000', credit: '-', balance: '₹0'),
-    StatementEntry(slNo: '5', date: '20-04-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
-    StatementEntry(slNo: '6', date: '20-05-2024', type: 'Debit', dividend: '-', debit: '₹10,000', credit: '-', balance: '₹0'),
-    StatementEntry(slNo: '7', date: '20-05-2024', type: 'Credit', dividend: '₹500', debit: '-', credit: '₹10,000', balance: '₹10,000'),
-  ];
+  bool _isLoading = true;
+  List<StatementEntry> _entries = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStatement();
+  }
+
+  Future<void> _fetchStatement() async {
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6008',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'chit_id': widget.chit.chitId,
+          'cus_id': '1',
+        },
+      );
+      if (response.statusCode == 200) {
+        debugPrint('CHIT STATEMENT API RESPONSE: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['transactions'] != null) {
+          final List<dynamic> txns = data['transactions'];
+          final List<StatementEntry> loadedEntries = txns.map((item) {
+            String dividend = item['dividend'] == 0 ? '-' : '₹${item['dividend']}';
+            String debit = item['debit'] == 0 ? '-' : '₹${item['debit']}';
+            String credit = item['credit'] == 0 ? '-' : '₹${item['credit']}';
+            String balance = '₹${item['balance']}';
+            
+            String type = '';
+            if (credit != '-' && debit == '-') {
+              type = 'Credit';
+            } else if (debit != '-' && credit == '-') {
+              type = 'Debit';
+            } else {
+              type = 'Debit'; // Default fallback
+            }
+
+            return StatementEntry(
+              slNo: item['sno']?.toString() ?? '',
+              date: item['date']?.toString() ?? '',
+              type: type,
+              dividend: dividend,
+              debit: debit,
+              credit: credit,
+              balance: balance,
+            );
+          }).toList();
+          
+          if (mounted) {
+            setState(() {
+              _entries = loadedEntries;
+              _isLoading = false;
+            });
+          }
+        } else {
+          if (mounted) setState(() => _isLoading = false);
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _handleDownload() async {
     setState(() {
@@ -237,11 +303,15 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(16),
-                child: _buildPassbookTable(),
-              ),
+              child: _isLoading 
+                  ? const Center(child: CircularProgressIndicator()) 
+                  : _entries.isEmpty 
+                      ? const Center(child: Text("No statement found"))
+                      : SingleChildScrollView(
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(16),
+                          child: _buildPassbookTable(),
+                        ),
             ),
             _buildBottomActions(),
           ],

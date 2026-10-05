@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
@@ -7,10 +10,15 @@ import 'chit_statement_screen.dart';
 import 'passbook_screen.dart';
 import 'my_chits_screen.dart' show ChitItem, ChitPrizeStatus;
 
-class ChitsDetailScreen extends StatelessWidget {
+class ChitsDetailScreen extends StatefulWidget {
   final ChitItem chit;
   const ChitsDetailScreen({super.key, required this.chit});
 
+  @override
+  State<ChitsDetailScreen> createState() => _ChitsDetailScreenState();
+}
+
+class _ChitsDetailScreenState extends State<ChitsDetailScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kLabel = Color(0xFF475569);
   static const Color kNavy = Color(0xFF1E293B);
@@ -51,12 +59,70 @@ class ChitsDetailScreen extends StatelessWidget {
     );
   }
 
+  bool _isLoading = true;
+  String _runningBalance = '0';
+  String _totalPaid = '0';
+  int _due = 0;
+  String _totalMonths = '0';
+
+  @override
+  void initState() {
+    super.initState();
+    _runningBalance = widget.chit.runningBalance;
+    _totalPaid = widget.chit.totalDividend;
+    _due = widget.chit.completedMonths;
+    _totalMonths = widget.chit.totalMonths.toString();
+    _fetchDue();
+  }
+
+  Future<void> _fetchDue() async {
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6009',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'chit_id': widget.chit.chitId,
+          'cus_id': '1',
+        },
+      );
+      if (response.statusCode == 200) {
+        debugPrint('CHIT DUE API RESPONSE: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false) {
+          if (mounted) {
+            setState(() {
+              _due = int.tryParse(data['due']?.toString() ?? '') ?? _due;
+              _totalMonths = data['total_months']?.toString() ?? _totalMonths;
+              _runningBalance = '₹${data['running_balance'] ?? 0}';
+              _totalPaid = '₹${data['total_paid'] ?? 0}';
+              _isLoading = false;
+            });
+          }
+        } else {
+          if (mounted) setState(() => _isLoading = false);
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBg,
       appBar: _buildAppBar(context),
-      body: ListView(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator()) 
+          : ListView(
         padding: const EdgeInsets.only(top: 17, bottom: 24),
         children: [
           Padding(
@@ -87,12 +153,13 @@ class ChitsDetailScreen extends StatelessWidget {
                     fallback: Icons.description,
                     onTap: () {
                       final chitData = ChitData(
-                        name: chit.name,
-                        groupCode: chit.groupCode,
-                        isPrized: chit.prizeStatus == ChitPrizeStatus.prized,
-                        chitValue: chit.chitValue,
-                        startDate: chit.startDate,
-                        endDate: chit.endDate,
+                        name: widget.chit.name,
+                        chitId: widget.chit.chitId,
+                        groupCode: widget.chit.groupCode,
+                        isPrized: widget.chit.prizeStatus == ChitPrizeStatus.prized,
+                        chitValue: widget.chit.chitValue,
+                        startDate: widget.chit.startDate,
+                        endDate: widget.chit.endDate,
                       );
                       Navigator.push(
                         context,
@@ -112,12 +179,13 @@ class ChitsDetailScreen extends StatelessWidget {
                     fallback: Icons.menu_book,
                     onTap: () {
                       final chitData = ChitData(
-                        name: chit.name,
-                        groupCode: chit.groupCode,
-                        isPrized: chit.prizeStatus == ChitPrizeStatus.prized,
-                        chitValue: chit.chitValue,
-                        startDate: chit.startDate,
-                        endDate: chit.endDate,
+                        name: widget.chit.name,
+                        chitId: widget.chit.chitId,
+                        groupCode: widget.chit.groupCode,
+                        isPrized: widget.chit.prizeStatus == ChitPrizeStatus.prized,
+                        chitValue: widget.chit.chitValue,
+                        startDate: widget.chit.startDate,
+                        endDate: widget.chit.endDate,
                       );
                       Navigator.push(
                         context,
@@ -246,7 +314,7 @@ class ChitsDetailScreen extends StatelessWidget {
 
   // Figma: Group 1000004931 -> 328 x 160, white, border 0.6 #E2E5E8
   Widget _buildMainCard() {
-    final prized = chit.prizeStatus == ChitPrizeStatus.prized;
+    final prized = widget.chit.prizeStatus == ChitPrizeStatus.prized;
     return Container(
       height: 160,
       clipBehavior: Clip.antiAlias,
@@ -277,18 +345,34 @@ class ChitsDetailScreen extends StatelessWidget {
           Positioned(
             left: 53,
             top: 14,
-            child: Text(chit.name,
-                style: _t(12, FontWeight.w500, Colors.black, spacing: -0.5)),
-          ),
-          Positioned(
-            left: 53,
-            top: 28,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('GROUP CODE',
-                    style: _t(11, FontWeight.w500, kLabel, spacing: 0.55)),
-                const SizedBox(width: 6),
-                Text(chit.groupCode, style: _t(16, FontWeight.w700, kNavy)),
+                Text(widget.chit.name,
+                    style: _t(12, FontWeight.w500, Colors.black, spacing: -0.5)),
+                if (widget.chit.chitId.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Row(
+                      children: [
+                        Text('CHIT ID -',
+                            style: _t(10, FontWeight.w500, kLabel, spacing: 0.55)),
+                        const SizedBox(width: 6),
+                        Text(widget.chit.chitId, style: _t(11, FontWeight.w600, kNavy)),
+                      ],
+                    ),
+                  ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    children: [
+                      Text('GROUP CODE',
+                          style: _t(11, FontWeight.w500, kLabel, spacing: 0.55)),
+                      const SizedBox(width: 6),
+                      Text(widget.chit.groupCode, style: _t(16, FontWeight.w700, kNavy)),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -311,14 +395,14 @@ class ChitsDetailScreen extends StatelessWidget {
               children: [
                 SizedBox(
                   width: 118,
-                  child: _gridCol('Chit Value', chit.chitValue,
+                  child: _gridCol('Chit Value', widget.chit.chitValue,
                       _t(14, FontWeight.w700, kGreen, height: 20 / 14), 3.5),
                 ),
                 SizedBox(
                   width: 109,
-                  child: _gridCol('Start Date', chit.startDate, _dateStyle, 5.5),
+                  child: _gridCol('Start Date', widget.chit.startDate, _dateStyle, 5.5),
                 ),
-                Expanded(child: _gridCol('End Date', chit.endDate, _dateStyle, 5.5)),
+                Expanded(child: _gridCol('End Date', widget.chit.endDate, _dateStyle, 5.5)),
               ],
             ),
           ),
@@ -335,10 +419,10 @@ class ChitsDetailScreen extends StatelessWidget {
                 children: [
                   _icon(kDividend, 23, Icons.call_split, color: kGreen),
                   const SizedBox(width: 10),
-                  Text('TOTAL DIVIDENT',
+                  Text('TOTAL PAiD',
                       style: _t(12, FontWeight.w500, kNavy, spacing: 0.6)),
                   const SizedBox(width: 24),
-                  Text(chit.totalDividend,
+                  Text(_totalPaid,
                       style: _t(18, FontWeight.w700, kNavy, spacing: -0.45)),
                 ],
               ),
@@ -379,7 +463,7 @@ class ChitsDetailScreen extends StatelessWidget {
               style: _t(11, FontWeight.w500, const Color(0xFF022C22),
                   height: 16.5 / 11, spacing: 0.55)),
           const SizedBox(width: 6),
-          Text(chit.runningBalance,
+          Text(_runningBalance,
               style: _t(18, FontWeight.w700, const Color(0xFF003E21),
                   height: 28 / 18, spacing: -0.45)),
         ],
@@ -388,8 +472,9 @@ class ChitsDetailScreen extends StatelessWidget {
   }
 
   Widget _buildDuration() {
-    final done = chit.completedMonths;
-    final total = chit.totalMonths;
+    final done = _due;
+    final totalStr = _totalMonths;
+    final total = int.tryParse(totalStr) ?? widget.chit.totalMonths;
     return Container(
       height: 123,
       decoration: BoxDecoration(

@@ -4,7 +4,8 @@ import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/setting/privacy_policy.dart';
 import 'package:siva_sakthi/setting/profile_info.dart';
 import 'package:siva_sakthi/setting/terms_condition.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:siva_sakthi/OnBoarding_Screen/login_screen.dart';
 
 // ==========================================================
 // SETTING SCREEN
@@ -125,6 +126,90 @@ class _SettingScreenState extends State<SettingScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: const Text(
+            'Logout',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Are you sure you want to logout?',
+                style: TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'No',
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.clear();
+                        
+                        if (!context.mounted) return;
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF3C93F4),
+                          borderRadius: BorderRadius.circular(12),
+                        
+                        ),
+                        alignment: Alignment.center,
+                        child: const Text(
+                          'Yes',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -267,7 +352,7 @@ class _SettingScreenState extends State<SettingScreen> {
             ]),
             SizedBox(height: h(18)),
 
-            _sectionCard(w, h, [_logoutRow(w, h, onTap: () {})]),
+            _sectionCard(w, h, [_logoutRow(w, h, onTap: () => _showLogoutDialog(context))]),
           ],
         ),
       ),

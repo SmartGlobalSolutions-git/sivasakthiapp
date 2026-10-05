@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:siva_sakthi/home/home.dart';
 
 import 'get_started_screen.dart';
 
@@ -64,18 +66,34 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
-  void _proceed() {
+  void _proceed() async {
     if (widget.onComplete != null) {
       widget.onComplete!();
     } else {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 300),
-          pageBuilder: (_, _, _) => const GetStartedScreen(),
-          transitionsBuilder: (context, anim, _, child) =>
-              FadeTransition(opacity: anim, child: child),
-        ),
-      );
+      final prefs = await SharedPreferences.getInstance();
+      final bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+      if (!mounted) return;
+
+      if (isLoggedIn) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 300),
+            pageBuilder: (_, _, _) => const SivaSakthiHomeScreen(),
+            transitionsBuilder: (context, anim, _, child) =>
+                FadeTransition(opacity: anim, child: child),
+          ),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 300),
+            pageBuilder: (_, _, _) => const GetStartedScreen(),
+            transitionsBuilder: (context, anim, _, child) =>
+                FadeTransition(opacity: anim, child: child),
+          ),
+        );
+      }
     }
   }
 

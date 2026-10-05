@@ -14,11 +14,8 @@ import 'package:siva_sakthi/payment/enter_payment.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
 import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
 import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
-
 // ==========================================================
 // SIVA SAKTHI CHIT FUNDS - HOME SCREEN
-// Built with MediaQuery-based responsive scaling (base 360x812).
-// All colors, fonts and sizes match the Figma design.
 // ==========================================================
 
 class SivaSakthiHomeScreen extends StatefulWidget {

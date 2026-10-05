@@ -50,6 +50,7 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
         },
       );
       if (response.statusCode == 200) {
+        debugPrint('STATEMENT API RESPONSE: ${response.body}');
         final data = json.decode(response.body);
         if (data['error'] == false && data['chits'] != null) {
           setState(() {
@@ -150,7 +151,7 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
       ),
     );
   }
-
+  
   // ---------------- App bar (this screen only) ----------------
   PreferredSizeWidget _buildAppBar() {
     return AppBar(

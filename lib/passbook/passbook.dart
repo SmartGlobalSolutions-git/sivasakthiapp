@@ -50,6 +50,7 @@ class _PassbookSearchScreenState extends State<PassbookSearchScreen> {
         },
       );
       if (response.statusCode == 200) {
+        debugPrint('PASSBOOK CHITS API RESPONSE: ${response.body}');
         final data = json.decode(response.body);
         if (data['error'] == false && data['chits'] != null) {
           setState(() {

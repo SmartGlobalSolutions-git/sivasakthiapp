@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:siva_sakthi/services/device_location_service.dart';
 
 class PassbookEntry {
   final String slNo;
@@ -29,7 +32,7 @@ class PassbookScreen extends StatefulWidget {
 class _PassbookScreenState extends State<PassbookScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kGold = Color(0xFF3C93F4);
-  static const Color kHeaderBlue = Color(0xFF193FBD);
+  static const Color kHeaderBlue = Color(0xFF3C93F4);
   static const Color kHeaderDivider = Color(0xFF3C93F4);
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);
@@ -37,20 +40,20 @@ class _PassbookScreenState extends State<PassbookScreen> {
   static const double _borderWidth = 0.84;
 
   static const List<String> _labels = [
-    'S.NO',
-    'RECEIPT NO.',
-    'RECEIPT DATE',
     'AMOUNT',
     'PAY TYPE',
+    'RECEIPT DATE',
+    'RECEIPT NO.',
+    'S.NO',
   ];
-  static const List<double> _rowHeights = [70, 140, 140, 140, 148];
+  static const List<double> _rowHeights = [148, 140, 140, 140, 70];
 
   static const List<FontWeight> _rowWeights = [
     FontWeight.w700,
     FontWeight.w400,
     FontWeight.w400,
-    FontWeight.w700,
     FontWeight.w400,
+    FontWeight.w700,
   ];
 
   static const double _labelColWidth = 37.47;
@@ -66,23 +69,68 @@ class _PassbookScreenState extends State<PassbookScreen> {
   }
 
   Future<void> _fetchStatement() async {
-    // TODO: replace with the real API call using widget.chitId / widget.dateRange
-    await Future.delayed(const Duration(milliseconds: 300));
-    setState(() {
-      _entries = const [
-        PassbookEntry(slNo: '01', receiptNo: 'RCP-08101', receiptDate: '10-Nov-2023', amount: '₹50,000.00', payType: 'Online'),
-        PassbookEntry(slNo: '02', receiptNo: 'RCP-08422', receiptDate: '12-Dec-2023', amount: '₹43,600.00', payType: 'Cash'),
-        PassbookEntry(slNo: '03', receiptNo: 'RCP-08990', receiptDate: '11-Jan-2024', amount: '₹44,000.00', payType: 'Online'),
-        PassbookEntry(slNo: '04', receiptNo: 'RCP-09312', receiptDate: '10-Feb-2024', amount: '₹44,450.00', payType: 'Cash'),
-        PassbookEntry(slNo: '05', receiptNo: 'RCP-09780', receiptDate: '14-Mar-2024', amount: '₹44,700.00', payType: 'Online'),
-        PassbookEntry(slNo: '06', receiptNo: 'RCP-10145', receiptDate: '10-Apr-2024', amount: '₹44,850.00', payType: 'Cash'),
-        PassbookEntry(slNo: '07', receiptNo: 'RCP-10620', receiptDate: '11-May-2024', amount: '₹45,100.00', payType: 'Online'),
-        PassbookEntry(slNo: '08', receiptNo: 'RCP-11005', receiptDate: '12-Jun-2024', amount: '₹45,380.00', payType: 'Cash'),
-        PassbookEntry(slNo: '09', receiptNo: 'RCP-11440', receiptDate: '10-Jul-2024', amount: '₹45,650.00', payType: 'Online'),
-        PassbookEntry(slNo: '', receiptNo: 'Total', receiptDate: '', amount: '₹4,07,730.00', payType: ''),
-      ];
-      _loading = false;
-    });
+    try {
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6005',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'chit_id': widget.chitId ?? '1',
+          'cus_id': '1',
+        },
+      );
+      if (response.statusCode == 200) {
+        debugPrint('PASSBOOK VIEW API RESPONSE: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['receipts'] != null) {
+          final List<dynamic> receipts = data['receipts'];
+          int slNo = 1;
+          final List<PassbookEntry> loadedEntries = receipts.map((item) {
+            final receiptNo = item['receipt_no']?.toString() ?? '';
+            final receiptDate = item['receipt_date']?.toString() ?? '';
+            final amount = item['amount']?.toString() ?? '0';
+            final payType = item['p_type_label']?.toString() ?? '';
+            
+            return PassbookEntry(
+              slNo: (slNo++).toString().padLeft(2, '0'),
+              receiptNo: receiptNo,
+              receiptDate: receiptDate,
+              amount: '₹$amount.00',
+              payType: payType,
+            );
+          }).toList();
+          
+          final totalAmtStr = data['total_amount']?.toString() ?? '0';
+
+          if (mounted) {
+            setState(() {
+              _entries = loadedEntries;
+              if (_entries.isNotEmpty) {
+                 _entries.add(PassbookEntry(
+                    slNo: '', 
+                    receiptNo: '', 
+                    receiptDate: '', 
+                    amount: '₹$totalAmtStr.00', 
+                    payType: 'Total'
+                 ));
+              }
+              _loading = false;
+            });
+          }
+        } else {
+          if (mounted) setState(() => _loading = false);
+        }
+      } else {
+        if (mounted) setState(() => _loading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   // ---------------- App bar (this screen only) ----------------
@@ -123,11 +171,13 @@ class _PassbookScreenState extends State<PassbookScreen> {
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator(color: kGold))
-                  : SingleChildScrollView(
-                // left padding only - table scrolls to the right edge like Figma
-                padding: const EdgeInsets.only(left: 16, top: 16, bottom: 16),
-                child: _buildPassbookTable(),
-              ),
+                  : _entries.isEmpty 
+                      ? const Center(child: Text("No receipts found"))
+                      : SingleChildScrollView(
+                          // left padding only - table scrolls to the right edge like Figma
+                          padding: const EdgeInsets.only(left: 16, top: 16, bottom: 16),
+                          child: _buildPassbookTable(),
+                        ),
             ),
             _buildBottomActions(),
           ],
@@ -197,12 +247,14 @@ class _PassbookScreenState extends State<PassbookScreen> {
                   final e = _entries[colIndex];
                   final bool striped = colIndex.isOdd;
                   final cells = [
-                    e.slNo,
-                    e.receiptNo,
-                    e.receiptDate,
                     e.amount,
                     e.payType,
+                    e.receiptDate,
+                    e.receiptNo,
+                    e.slNo,
                   ];
+
+                  final isTotalCol = e.payType == 'Total';
 
                   return Container(
                     width: _dataColWidth,
@@ -216,26 +268,65 @@ class _PassbookScreenState extends State<PassbookScreen> {
                       ),
                     ),
                     child: Column(
-                      children: List.generate(cells.length, (rowIndex) {
-                        return Container(
-                          height: _rowHeights[rowIndex],
-                          alignment: Alignment.center,
-                          child: RotatedBox(
-                            quarterTurns: 3,
-                            child: Text(
-                              cells[rowIndex],
-                              maxLines: 1,
-                              textAlign: TextAlign.center,
-                              style: GoogleFonts.inter(
-                                fontSize: 10.06,
-                                height: 13.41 / 10.06,
-                                fontWeight: _rowWeights[rowIndex],
-                                color: kValueText,
+                      children: () {
+                        if (isTotalCol) {
+                          return [
+                            Container(
+                              height: _rowHeights[0] + _rowHeights[1],
+                              alignment: Alignment.center,
+                              child: Container(
+                                width: double.infinity,
+                                height: double.infinity,
+                                margin: const EdgeInsets.symmetric(vertical: 48.0, horizontal: 4.0),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: kGold, width: 1),
+                                ),
+                                alignment: Alignment.center,
+                                child: RotatedBox(
+                                  quarterTurns: 3,
+                                  child: Text(
+                                    'Total = ${e.amount}',
+                                    maxLines: 1,
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      height: 13.41 / 10.06,
+                                      fontWeight: FontWeight.w700,
+                                      color: kGold,
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      }),
+                            Container(height: _rowHeights[2]),
+                            Container(height: _rowHeights[3]),
+                            Container(height: _rowHeights[4]),
+                          ];
+                        } else {
+                          return List.generate(cells.length, (rowIndex) {
+                            return Container(
+                              height: _rowHeights[rowIndex],
+                              alignment: Alignment.center,
+                              child: RotatedBox(
+                                quarterTurns: 3,
+                                child: Text(
+                                  cells[rowIndex],
+                                  maxLines: 1,
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.06,
+                                    height: 13.41 / 10.06,
+                                    fontWeight: _rowWeights[rowIndex],
+                                    color: kValueText,
+                                  ),
+                                ),
+                              ),
+                            );
+                          });
+                        }
+                      }(),
                     ),
                   );
                 }),

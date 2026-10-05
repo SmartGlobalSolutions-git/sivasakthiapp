@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:siva_sakthi/home/home.dart';
 
 class TermsAndConditionScreen extends StatefulWidget {
@@ -247,7 +248,7 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                     width: double.infinity,
                     height: 50.076923,
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         if (!_isAgreed) {
                           ScaffoldMessenger.of(context).hideCurrentSnackBar();
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -267,6 +268,11 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                           );
                           return;
                         }
+                        
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setBool('isLoggedIn', true);
+
+                        if (!mounted) return;
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(

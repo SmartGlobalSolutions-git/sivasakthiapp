@@ -1,5 +1,6 @@
 class ChitData {
   final String name;
+  final String chitId;
   final String groupCode;
   final bool isPrized;
   final String chitValue;
@@ -8,6 +9,7 @@ class ChitData {
 
   const ChitData({
     required this.name,
+    required this.chitId,
     required this.groupCode,
     required this.isPrized,
     required this.chitValue,

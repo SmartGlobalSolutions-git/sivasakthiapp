@@ -124,11 +124,11 @@ class LiveBidsScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text(
+                            Text(
                               'Time Remaining',
-                              style: TextStyle(
-                                color: Color(0xFFD1FAE5),
-                                fontSize: 14,
+                              style: GoogleFonts.inter(
+                                color: const Color(0xFFD1FAE5),
+                                fontSize: 11,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -198,12 +198,12 @@ class LiveBidsScreen extends StatelessWidget {
                                     const Icon(Icons.people, size: 24, color: Colors.blue),
                               ),
                               const SizedBox(width: 8),
-                              const Text(
+                              Text(
                                 'Member Statistics',
-                                style: TextStyle(
-                                  fontSize: 17.5,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1E293B),
+                                  color: const Color(0xFF1E293B),
                                 ),
                               ),
                             ],
@@ -279,12 +279,12 @@ class LiveBidsScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           'Live Bids(5)',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
+                          style: GoogleFonts.inriaSans(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF1D1D1D),
                             decoration: TextDecoration.underline,
                             decorationThickness: 1.5,
                           ),
@@ -316,12 +316,12 @@ class LiveBidsScreen extends StatelessWidget {
                                     const Icon(Icons.swap_vert, size: 15, color: Color(0xFF2563EB)),
                               ),
                               const SizedBox(width: 6),
-                              const Text(
+                              Text(
                                 'Latest First',
-                                style: TextStyle(
-                                  fontSize: 13.5,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF334155),
+                                  color: const Color(0xFF334155),
                                 ),
                               ),
                               const SizedBox(width: 4),
@@ -430,19 +430,19 @@ class LiveBidsScreen extends StatelessWidget {
               children: [
                 Text(
                   bidder.name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1E293B),
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   bidder.phone,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w400,
-                    color: Color(0xFF64748B),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF64748B),
                   ),
                 ),
               ],
@@ -468,10 +468,10 @@ class LiveBidsScreen extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     bidder.time,
-                    style: const TextStyle(
-                      fontSize: 13,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF64748B),
+                      color: const Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -535,10 +535,10 @@ class LiveBidsScreen extends StatelessWidget {
         Text(
           label,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 13,
+          style: GoogleFonts.inter(
+            fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF6B7280),
+            color: const Color(0xFF64748B),
             height: 1.15,
           ),
         ),

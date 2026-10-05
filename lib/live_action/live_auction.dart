@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/bottom_navbar.dart';
+import 'package:siva_sakthi/home/home.dart';
+
 import 'live_bids.dart';
 
 class LiveAuctionScreen extends StatefulWidget {
@@ -48,11 +50,17 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
         centerTitle: false,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
-          onPressed: () => Navigator.of(context).maybePop(),
+          onPressed: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SivaSakthiHomeScreen()),
+              (route) => false,
+            );
+          },
         ),
         title: Text(
           'Live Auction',
-          style: GoogleFonts.manrope(
+          style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.w500,
             color: Colors.black,
@@ -69,7 +77,8 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
       ),
       bottomNavigationBar: MainIconeFrames(
         currentIndex: 2,
-        onTabSelected: (index) => MainIconeFrames.navigateToTab(context, 2, index),
+        onTabSelected: (index) =>
+            MainIconeFrames.navigateToTab(context, 2, index),
       ),
     );
   }
@@ -142,9 +151,9 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
+                    child: Text(
                       'Join',
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -189,27 +198,28 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
                               item.roomTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1F2937),
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w400,
+                                color: const Color(0xFF000000),
                               ),
                             ),
                             const SizedBox(height: 2),
                             RichText(
                               text: TextSpan(
                                 text: 'Starts at ',
-                                style: const TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 12,
-                                  color: Color(0xFF6B7280),
+                                  color: const Color(0xFF475569),
                                   fontWeight: FontWeight.w400,
                                 ),
                                 children: [
                                   TextSpan(
                                     text: item.startTime,
-                                    style: const TextStyle(
-                                      color: Color(0xFF23A859),
-                                      fontWeight: FontWeight.w700,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 14,
+                                      color: const Color(0xFF018F48),
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -272,24 +282,26 @@ class _LiveAuctionScreenState extends State<LiveAuctionScreen> {
               Icon(fallbackIcon, size: 22, color: Colors.blueGrey),
         ),
         const SizedBox(width: 8),
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF6B7280),
-              fontWeight: FontWeight.w400,
-            ),
-            children: [
-              TextSpan(
-                text: value,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: valueColor,
-                  fontWeight: FontWeight.w600,
-                ),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              text: label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: const Color(0xFF475569),
+                fontWeight: FontWeight.w400,
               ),
-            ],
+              children: [
+                TextSpan(
+                  text: value,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    color: valueColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

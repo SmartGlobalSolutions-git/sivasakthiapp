@@ -54,6 +54,7 @@ class _ChitSchemScreenState extends State<ChitSchemScreen> {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
+        debugPrint('CHIT SCHEME API RESPONSE: ${response.body}');
         final Map<String, dynamic> data = jsonDecode(response.body);
         setState(() {
           _schemes = data['chit'] ?? [];
