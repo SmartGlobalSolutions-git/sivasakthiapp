@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/device_location_service.dart';
 
 // ---- Figma tokens (Profile) ----
 class _Colors {
@@ -79,36 +83,95 @@ class _TextStyles {
   );
 }
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({
-    super.key,
-    this.image,
-    this.name = 'Bharathi',
-    this.phone = '+91 7025053212',
-    this.customerId = 'SSCHT10245',
-    this.dateOfBirth = '15 Aug 1999',
-    this.gender = 'Male',
-    this.email = 'akhilmohan@gmail.com',
-    this.address = '12/1,New Street,\nCoimbatore,Tamil Nadu 641001',
-  });
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({super.key});
 
-  /// Profile photo, e.g. NetworkImage(url) or AssetImage(path).
-  final ImageProvider? image;
-  final String name;
-  final String phone;
-  final String customerId;
-  final String dateOfBirth;
-  final String gender;
-  final String email;
-  final String address;
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool _isLoading = true;
+  String _name = '';
+  String _phone = '';
+  String _customerId = '';
+  String _dateOfBirth = '';
+  String _gender = '';
+  String _email = '';
+  String _address = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProfile();
+  }
+
+  Future<void> _fetchProfile() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String savedCusId = prefs.getString('cus_id') ?? '1';
+
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6010',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'cus_id': savedCusId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['error'] == false) {
+          if (mounted) {
+            setState(() {
+              String safeString(dynamic value) {
+                final str = value?.toString().trim() ?? '';
+                return str.isEmpty ? '-' : str;
+              }
+
+              _name = safeString(data['name']);
+              _phone = safeString(data['mobile']);
+              _customerId = safeString(data['cus_id']);
+              _dateOfBirth = safeString(data['dob']);
+              
+              final genderCode = data['gender']?.toString().trim() ?? '';
+              if (genderCode.isEmpty) {
+                _gender = '-';
+              } else {
+                _gender = genderCode == 'M' ? 'Male' : (genderCode == 'F' ? 'Female' : genderCode);
+              }
+              
+              _email = safeString(data['email']);
+              _address = safeString(data['address']);
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (_) {}
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final rows = <_InfoRow>[
-      _InfoRow(icon: Icons.calendar_month_outlined, label: 'Date of Birth', value: dateOfBirth),
-      _InfoRow(icon: Icons.wc, label: 'Gender', value: gender),
-      _InfoRow(icon: Icons.mail_outline, label: 'Email Address', value: email),
-      _InfoRow(icon: Icons.location_on_outlined, label: 'Address', value: address),
+      _InfoRow(icon: Icons.calendar_month_outlined, label: 'Date of Birth', value: _dateOfBirth),
+      _InfoRow(icon: Icons.wc, label: 'Gender', value: _gender),
+      _InfoRow(icon: Icons.mail_outline, label: 'Email Address', value: _email),
+      _InfoRow(icon: Icons.location_on_outlined, label: 'Address', value: _address),
     ];
 
     return Scaffold(
@@ -154,18 +217,22 @@ class ProfileScreen extends StatelessWidget {
                     top: 49,
                     left: 0,
                     right: 0,
-                    child: Center(child: _Avatar(image: image)),
+                    child: Center(child: _Avatar(image: null)),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 15),
-            Text(name, style: _TextStyles.name),
-            const SizedBox(height: 4),
-            Text(phone, style: _TextStyles.phone),
-            const SizedBox(height: 5),
-            Text(customerId, style: _TextStyles.customerId),
-            const SizedBox(height: 23),
+            if (_isLoading)
+              const Padding(
+                padding: EdgeInsets.only(top: 50),
+                child: Center(child: CircularProgressIndicator(color: _Colors.primaryBlue)),
+              )
+            else ...[
+              const SizedBox(height: 15),
+              Text(_name, style: _TextStyles.name),
+              const SizedBox(height: 4),
+              Text(_phone, style: _TextStyles.phone),
+              const SizedBox(height: 23),
             const Align(
               alignment: Alignment.centerLeft,
               child: Padding(
@@ -206,6 +273,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+          ],
           ],
         ),
       ),

@@ -26,7 +26,7 @@ class ProfileMenuScreen extends StatelessWidget {
 
   const ProfileMenuScreen({
     super.key,
-    this.userName = 'Akhil',
+    this.userName = '',
     this.appVersion = 'App V1.0125',
     this.onNeedHelpTap,
     this.onProfileTap,

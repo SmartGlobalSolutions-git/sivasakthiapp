@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/chat_bot/chat.dart';
@@ -19,6 +20,7 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
   List<dynamic> _chits = [];
   bool _isLoadingChits = true;
   String? _selectedChitId;
+  String? _chitErrorMsg;
 
   static const Color kBg = Color(0xFFF3F3F5);
   static const Color kGold = Color(0xFF3C93F4);
@@ -36,6 +38,9 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
 
   Future<void> _fetchChits() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final String savedCusId = prefs.getString('cus_id') ?? '1';
+
       final String deviceId = await DeviceLocationService.getDeviceId();
       final Map<String, String> loc = await DeviceLocationService.getLocation();
       final response = await http.post(
@@ -46,7 +51,7 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
           'lt': loc['lat'] ?? '123',
           'ln': loc['lng'] ?? '123',
           'device_id': deviceId.isNotEmpty ? deviceId : '123',
-          'cus_id': '1',
+          'cus_id': savedCusId,
         },
       );
       if (response.statusCode == 200) {
@@ -58,13 +63,22 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
             _isLoadingChits = false;
           });
         } else {
-          setState(() => _isLoadingChits = false);
+          setState(() {
+            _isLoadingChits = false;
+            _chitErrorMsg = data['error_msg']?.toString() ?? 'No chits found';
+          });
         }
       } else {
-        setState(() => _isLoadingChits = false);
+        setState(() {
+          _isLoadingChits = false;
+          _chitErrorMsg = 'Server error';
+        });
       } 
     } catch (e) {
-      setState(() => _isLoadingChits = false);
+      setState(() {
+        _isLoadingChits = false;
+        _chitErrorMsg = 'Network error';
+      });
     }
   }
 
@@ -140,6 +154,8 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
   }
 
   void _onSubmit() {
+    if (_selectedChitId == null || _selectedRange == null) return;
+    
     // TODO: pass _chitIdController.text and _selectedRange to the passbook API
     Navigator.push(
       context,
@@ -252,7 +268,16 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           ),
                         )
-                      : PopupMenuButton<String>(
+                      : (_chits.isEmpty
+                          ? GestureDetector(
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(_chitErrorMsg ?? 'No chits found')),
+                                );
+                              },
+                              child: _buildChitDropdownTrigger(),
+                            )
+                          : PopupMenuButton<String>(
                           color: Colors.white,
                           position: PopupMenuPosition.under,
                           constraints: const BoxConstraints(maxHeight: 300),
@@ -279,30 +304,34 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
                               );
                             }).toList();
                           },
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  _selectedChitId ?? 'Select Chit ID:',
-                                  textAlign: TextAlign.center,
-                                  style: GoogleFonts.manrope(
-                                    fontSize: _selectedChitId == null ? 12.0 : 14.3,
-                                    fontWeight: FontWeight.w400,
-                                    color: _selectedChitId == null ? kPlaceholderGrey : kValueGrey,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                              const Icon(Icons.arrow_drop_down, color: kLabelGrey),
-                            ],
-                          ),
-                        ),
+                          child: _buildChitDropdownTrigger(),
+                        )),
                 ),
               ],
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildChitDropdownTrigger() {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            _selectedChitId ?? 'Select Chit ID:',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.manrope(
+              fontSize: _selectedChitId == null ? 12.0 : 14.3,
+              fontWeight: FontWeight.w400,
+              color: _selectedChitId == null ? kPlaceholderGrey : kValueGrey,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        const Icon(Icons.arrow_drop_down, color: kLabelGrey),
       ],
     );
   }
@@ -387,9 +416,14 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
 
   // Figma: Submit button 203 x 40, radius 39, centered
   Widget _buildSubmitButton() {
+    final bool canSubmit = _selectedChitId != null && _selectedRange != null;
     return Center(
       child: GestureDetector(
-        onTap: _onSubmit,
+        onTap: canSubmit ? _onSubmit : () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please select both Chit ID and Date Range to proceed')),
+          );
+        },
         child: Container(
           width: 203,
           height: 40,

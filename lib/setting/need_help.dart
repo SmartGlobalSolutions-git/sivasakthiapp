@@ -1,6 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/chat_bot/chat.dart';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/device_location_service.dart';
 
 // ---- Figma tokens (Need Help?) ----
 class _Colors {
@@ -74,11 +79,71 @@ class _TextStyles {
   );
 }
 
-class NeedHelpScreen extends StatelessWidget {
+class NeedHelpScreen extends StatefulWidget {
   const NeedHelpScreen({super.key, this.userName = 'Bharathi'});
 
-  /// Shown in the greeting and the "Chat to ... 24/7" caption.
   final String userName;
+
+  @override
+  State<NeedHelpScreen> createState() => _NeedHelpScreenState();
+}
+
+class _NeedHelpScreenState extends State<NeedHelpScreen> {
+  bool _isLoading = true;
+  String _generalPhone = '';
+  String _customerPhone = '';
+  String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHelpContent();
+  }
+
+  Future<void> _fetchHelpContent() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6012',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Need Help API Response: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['contact'] != null) {
+          if (mounted) {
+            setState(() {
+              _generalPhone = data['contact']['general_phone'] ?? '';
+              _customerPhone = data['contact']['customer_phone'] ?? '';
+              _email = data['contact']['email'] ?? '';
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching help content: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
@@ -118,7 +183,7 @@ class NeedHelpScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Hi $userName,\nHow can we help ?', style: _TextStyles.greeting),
+                  Text('Hi ${widget.userName},\nHow can we help ?', style: _TextStyles.greeting),
                   const SizedBox(height: 12),
                   const Text(
                     'Search a topic or find your query in the FAQs',
@@ -138,25 +203,30 @@ class NeedHelpScreen extends StatelessWidget {
               }),
             ),
             const SizedBox(height: 18),
-            Center(
-              child: Text('Chat to $userName 24/7 or one of our team',
-                  style: _TextStyles.chatCaption),
-            ),
-            const SizedBox(height: 18),
             const Padding(
               padding: EdgeInsets.only(left: 1),
               child: Text('Contact us', style: _TextStyles.sectionTitle),
             ),
             const SizedBox(height: 20),
-            _ContactCard(
+            _isLoading 
+              ? const Padding(
+                  padding: EdgeInsets.only(top: 20),
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              : _ContactCard(
               children: [
                 _ContactRow(
                   title: 'General Enquiry',
                   icon: Icons.phone_in_talk,
                   top: 20,
                   bottom: 10,
-                  onTap: () {
-                    // TODO: General Enquiry action
+                  onTap: () async {
+                    if (_generalPhone.isNotEmpty) {
+                      final Uri url = Uri.parse('tel:$_generalPhone');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    }
                   },
                 ),
                 const _Divider(),
@@ -165,8 +235,13 @@ class NeedHelpScreen extends StatelessWidget {
                   icon: Icons.phone_in_talk,
                   top: 13.5,
                   bottom: 13,
-                  onTap: () {
-                    // TODO: Collection/Payment Support action
+                  onTap: () async {
+                    if (_customerPhone.isNotEmpty) {
+                      final Uri url = Uri.parse('tel:$_customerPhone');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    }
                   },
                 ),
                 const _Divider(),
@@ -175,8 +250,13 @@ class NeedHelpScreen extends StatelessWidget {
                   icon: Icons.mail_outline,
                   top: 11,
                   bottom: 10.5,
-                  onTap: () {
-                    // TODO: Email action
+                  onTap: () async {
+                    if (_email.isNotEmpty) {
+                      final Uri url = Uri.parse('mailto:$_email');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    }
                   },
                 ),
               ],

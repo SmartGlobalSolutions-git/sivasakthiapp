@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/device_location_service.dart';
 
 class _Colors {
   static const Color textBody = Color(0xFF000000);
@@ -25,101 +29,131 @@ class _TextStyles {
   );
 }
 
-class AboutUsScreen extends StatelessWidget {
+class AboutUsScreen extends StatefulWidget {
   const AboutUsScreen({super.key});
+
+  @override
+  State<AboutUsScreen> createState() => _AboutUsScreenState();
+}
+
+class _AboutUsScreenState extends State<AboutUsScreen> {
+  bool _isLoading = true;
+  String _title = 'About Us';
+  List<dynamic> _description = [];
+  Map<String, dynamic> _mission = {};
+  Map<String, dynamic> _vision = {};
+  Map<String, dynamic> _coreValues = {};
+  Map<String, dynamic> _whyChooseUs = {};
+  Map<String, dynamic> _footer = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAboutUs();
+  }
+
+  Future<void> _fetchAboutUs() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6015',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('About Us API Response: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['data'] != null) {
+          if (mounted) {
+            setState(() {
+              _title = data['data']['title'] ?? _title;
+              _description = data['data']['description'] ?? [];
+              _mission = data['data']['mission'] ?? {};
+              _vision = data['data']['vision'] ?? {};
+              _coreValues = data['data']['core_values'] ?? {};
+              _whyChooseUs = data['data']['why_choose_us'] ?? {};
+              _footer = data['data']['footer'] ?? {};
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching About Us: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _Colors.white,
-      appBar: _Header(title: 'About Us'),
-      body: ListView(
+      appBar: _Header(title: _title),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
         padding: const EdgeInsets.fromLTRB(19, 16, 19, 32),
         children: [
-          Text(
-            'Siva Sakthi Chit Funds is dedicated to helping individuals, '
-                'families, and business owners manage their financial goals '
-                'through simple and organized chit fund plans.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Our focus is on providing a transparent, reliable, and '
-                'customer-friendly experience. We believe that regular savings, '
-                'proper planning, and disciplined financial habits can help '
-                'people prepare for future needs and manage important expenses '
-                'with greater confidence.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'At Siva Sakthi Chit Funds, we offer different chit plans '
-                'designed to suit various financial requirements and budgets. '
-                'From joining a suitable plan to tracking installments, '
-                'participating in auctions, checking statements, and managing '
-                'payments, we aim to make the entire process easy and '
-                'convenient for our customers.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'We value trust, transparency, timely service, and long-term '
-                'customer relationships. Our team is committed to clearly '
-                'explaining plan details, payment schedules, auction processes, '
-                'and account information so that customers can make informed '
-                'decisions.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Through our digital services, customers can conveniently '
-                'access important information related to their chit account, '
-                'upcoming payments, transaction history, plan details, and '
-                'other services from one place.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 16),
-          Text('Our Mission', style: _TextStyles.bodyBold),
-          const SizedBox(height: 6),
-          Text(
-            'To provide simple, transparent, and dependable chit fund '
-                'services that support better saving habits and financial '
-                'planning.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 16),
-          Text('Our Vision', style: _TextStyles.bodyBold),
-          const SizedBox(height: 6),
-          Text(
-            'To become a trusted financial service partner by delivering '
-                'convenient solutions, responsible service, and a positive '
-                'customer experience.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 16),
-          Text('Our Core Values', style: _TextStyles.bodyBold),
-          const SizedBox(height: 6),
-          const _BulletList(items: [
-            'Trust – Building strong and lasting relationships with our customers.',
-            'Transparency – Providing clear information about plans, payments, and processes.',
-            'Customer Focus – Keeping customer convenience and satisfaction at the centre of our services.',
-            'Reliability – Delivering consistent and dependable support.',
-            'Responsibility – Encouraging disciplined financial planning and regular savings.',
-            'Convenience – Making account management simple through easy-to-use digital services.',
-          ]),
-          const SizedBox(height: 16),
-          Text('Why Choose Siva Sakthi Chit Funds?', style: _TextStyles.bodyBold),
-          const SizedBox(height: 6),
-          Text(
-            'With customer-friendly chit plans, clear processes, convenient '
-                'payment management, account tracking, auction information, '
-                'and dedicated support, Siva Sakthi Chit Funds aims to provide '
-                'a smooth and dependable experience for every customer.',
-            style: _TextStyles.body,
-          ),
-          const SizedBox(height: 16),
-          Text('Siva Sakthi Chit Funds', style: _TextStyles.bodyBold),
-          Text('Save Regularly • Plan Better • Grow Together', style: _TextStyles.body),
+          ..._description.map((desc) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(desc.toString(), style: _TextStyles.body),
+            );
+          }),
+          const SizedBox(height: 4),
+
+          if (_mission.isNotEmpty) ...[
+            Text(_mission['title'] ?? 'Our Mission', style: _TextStyles.bodyBold),
+            const SizedBox(height: 6),
+            Text(_mission['content'] ?? '', style: _TextStyles.body),
+            const SizedBox(height: 16),
+          ],
+
+          if (_vision.isNotEmpty) ...[
+            Text(_vision['title'] ?? 'Our Vision', style: _TextStyles.bodyBold),
+            const SizedBox(height: 6),
+            Text(_vision['content'] ?? '', style: _TextStyles.body),
+            const SizedBox(height: 16),
+          ],
+
+          if (_coreValues.isNotEmpty) ...[
+            Text(_coreValues['title'] ?? 'Our Core Values', style: _TextStyles.bodyBold),
+            const SizedBox(height: 6),
+            _BulletList(items: [
+              for (var item in (_coreValues['items'] ?? []))
+                '${item['title']} – ${item['description']}'
+            ]),
+            const SizedBox(height: 16),
+          ],
+
+          if (_whyChooseUs.isNotEmpty) ...[
+            Text(_whyChooseUs['title'] ?? '', style: _TextStyles.bodyBold),
+            const SizedBox(height: 6),
+            Text(_whyChooseUs['content'] ?? '', style: _TextStyles.body),
+            const SizedBox(height: 16),
+          ],
+
+          if (_footer.isNotEmpty) ...[
+            Text(_footer['company'] ?? '', style: _TextStyles.bodyBold),
+            Text(_footer['tagline'] ?? '', style: _TextStyles.body),
+          ],
         ],
       ),
     );

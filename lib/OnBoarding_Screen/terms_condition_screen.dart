@@ -1,8 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:siva_sakthi/home/home.dart';
+import '../services/device_location_service.dart';
 
 class TermsAndConditionScreen extends StatefulWidget {
   const TermsAndConditionScreen({super.key});
@@ -13,7 +16,64 @@ class TermsAndConditionScreen extends StatefulWidget {
 }
 
 class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
-  bool _isAgreed = false; // Unchecked by default; user must manually check it
+  bool _isAgreed = false;
+  bool _isLoading = true;
+  String _title = 'Terms & Condition';
+  String _agreementText = 'I have read and agree to the Terms & Risk\nDisclosure';
+  String _buttonText = 'Agree & Continue';
+  List<dynamic> _sections = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchTerms();
+  }
+
+  Future<void> _fetchTerms() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6011',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Terms & Conditions API Response: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['sections'] != null) {
+          if (mounted) {
+            setState(() {
+              _title = data['sections']['title'] ?? _title;
+              _agreementText = data['sections']['agreement_text'] ?? _agreementText;
+              _buttonText = data['sections']['button_text'] ?? _buttonText;
+              _sections = data['sections']['sections'] ?? [];
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching Terms & Conditions: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +122,7 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               alignment: Alignment.center,
               child: Text(
-                'Terms & Condition',
+                _title,
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -77,7 +137,9 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                 color: const Color(0xffffffff),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 24.0),
-                  child: Column(
+                  child: _isLoading 
+                      ? const Center(child: CircularProgressIndicator())
+                      : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -86,82 +148,18 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'By registering, accessing or using the App, you agree to these Terms & Conditions. These Terms govern use of the App as a digital service channel.',
+                        'By registering, accessing or using the App, you agree to these $_title. These Terms govern use of the App as a digital service channel.',
                         style: regularStyle,
                       ),
                       const SizedBox(height: 14),
-                      _buildSection(
-                        'Use of Services',
-                        'Users must provide correct and complete information while using Siva Sakthi services. Our services must not be used for any illegal or unauthorized activity.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'User Information',
-                        'Users are responsible for the accuracy of the personal and contact information they provide.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Products & Services',
-                        'Details, availability, pricing, and other information related to our products or services may be updated from time to time.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Payments',
-                        'All applicable payments must be completed through the available payment methods. Any additional charges, taxes, or service fees will be displayed where applicable.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Cancellation & Refund',
-                        'Cancellation and refund requests will be handled according to the applicable cancellation and refund policy of Siva Sakthi.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Privacy',
-                        'Personal information collected from users will be handled according to our Privacy Policy and applicable laws.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Third-Party Services',
-                        'Siva Sakthi may use third-party services such as payment gateways, communication services, or external links. We are not responsible for issues caused directly by third-party platforms.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Intellectual Property',
-                        'The Siva Sakthi name, logo, content, graphics, and other materials belong to Siva Sakthi or their respective owners and must not be copied or misused without permission.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Limitation of Liability',
-                        'Siva Sakthi will make reasonable efforts to provide accurate and reliable services. However, we are not responsible for losses caused by circumstances beyond our reasonable control, technical interruptions, or incorrect information provided by users.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Changes to Terms',
-                        'We may update these Terms and Conditions when required. Continued use of our services after an update means that you accept the revised terms.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Governing Law',
-                        'These Terms and Conditions will be governed by the applicable laws of India. Any disputes will be subject to the jurisdiction specified by Siva Sakthi.',
-                        boldStyle,
-                        regularStyle,
-                      ),
-                      _buildSection(
-                        'Contact Us',
-                        'For questions regarding these Terms and Conditions, please contact Siva Sakthi through the official contact details provided on our website or application.',
-                        boldStyle,
-                        regularStyle,
-                      ),
+                      ..._sections.map((section) {
+                        return _buildSection(
+                          section['heading'] ?? '',
+                          section['content'] ?? '',
+                          boldStyle,
+                          regularStyle,
+                        );
+                      }),
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -230,7 +228,7 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'I have read and agree to the Terms & Risk\nDisclosure',
+                            _agreementText,
                             style: GoogleFonts.inter(
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
@@ -290,7 +288,7 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                         ),
                       ),
                       child: Text(
-                        'Agree & Continue',
+                        _buttonText,
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:siva_sakthi/services/device_location_service.dart';
 
 class PassbookEntry {
@@ -70,6 +71,9 @@ class _PassbookScreenState extends State<PassbookScreen> {
 
   Future<void> _fetchStatement() async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final String savedCusId = prefs.getString('cus_id') ?? '1';
+
       final String deviceId = await DeviceLocationService.getDeviceId();
       final Map<String, String> loc = await DeviceLocationService.getLocation();
       final response = await http.post(
@@ -80,8 +84,8 @@ class _PassbookScreenState extends State<PassbookScreen> {
           'lt': loc['lat'] ?? '123',
           'ln': loc['lng'] ?? '123',
           'device_id': deviceId.isNotEmpty ? deviceId : '123',
-          'chit_id': widget.chitId ?? '1',
-          'cus_id': '1',
+          'chit_id': widget.chitId ?? '',
+          'cus_id': savedCusId,
         },
       );
       if (response.statusCode == 200) {

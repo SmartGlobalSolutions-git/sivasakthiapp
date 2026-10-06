@@ -1,4 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/device_location_service.dart';
 import 'contact_support.dart';
 
 
@@ -53,44 +57,6 @@ class _FaqItem {
   final String answer;
 }
 
-const List<_FaqItem> _faqItems = [
-  _FaqItem(
-    'What documents are required for verification?',
-    'You need to upload your Aadhaar card (front and back), PAN card, '
-        'latest salary slip, Voter ID and a live selfie for verification.',
-  ),
-  _FaqItem(
-    'How long does verification take?',
-    'Verification usually takes a few minutes. In some cases, it may take '
-        'longer if additional verification is required.',
-  ),
-  _FaqItem(
-    'Is my information safe?',
-    'Yes. Your information is securely handled and used only for verification '
-        'and related services. We take appropriate measures to protect your data.',
-  ),
-  _FaqItem(
-    'What should I do if my document is rejected?',
-    'Check the rejection reason and upload a clear, valid document again. '
-        'Make sure all details are visible and match your information.',
-  ),
-  _FaqItem(
-    'Can I update my documents later?',
-    'Yes. You can update your documents later if your information changes '
-        'or if a new document is required for verification.',
-  ),
-  _FaqItem(
-    'What file format and size are allowed?',
-    'Upload clear documents in JPG, JPEG or PNG format. The file size should '
-        'be within the limit shown on the document upload screen.',
-  ),
-  _FaqItem(
-    'Who can I contact for further support?',
-    'You can contact our customer support team through the Support section '
-        'in the app for further assistance.',
-  ),
-];
-
 class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
 
@@ -99,14 +65,71 @@ class FaqScreen extends StatefulWidget {
 }
 
 class _FaqScreenState extends State<FaqScreen> {
+  bool _isLoading = true;
+  List<_FaqItem> _faqItems = [];
   int? _expandedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFaq();
+  }
+
+  Future<void> _fetchFaq() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6014',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('FAQ API Response: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['faq'] != null) {
+          final List<dynamic> faqList = data['faq'];
+          if (mounted) {
+            setState(() {
+              _faqItems = faqList.map((f) => _FaqItem(
+                f['question']?.toString() ?? '', 
+                f['answer']?.toString() ?? ''
+              )).toList();
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching FAQ: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _Colors.scaffoldBg,
       appBar: _Header(title: 'FAQ'),
-      body: ListView(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         children: [
           for (int i = 0; i < _faqItems.length; i++) ...[

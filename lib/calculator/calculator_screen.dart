@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'subscription_plan_screen.dart';
+import 'calculator_scheme.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -33,10 +33,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
     if (investmentText.isEmpty && emiText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter Investment Amount or EMI Amount'),
-          backgroundColor: Color(0xFFE11D48),
-          behavior: SnackBarBehavior.floating,
+        SnackBar(
+          content: Text('Please enter Investment Amount or EMI Amount', style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
       return;
@@ -44,10 +44,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
     if (_selectedNoOfEmis == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please select No Of EMI's"),
-          backgroundColor: Color(0xFFE11D48),
-          behavior: SnackBarBehavior.floating,
+        SnackBar(
+          content: Text("Please select No Of EMI's", style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
       return;
@@ -55,10 +55,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
     if (_selectedNoOfChitMembers == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select No Of Chit Members'),
-          backgroundColor: Color(0xFFE11D48),
-          behavior: SnackBarBehavior.floating,
+        SnackBar(
+          content: Text('Please select No Of Chit Members', style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
         ),
       );
       return;
@@ -69,9 +69,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => SubscriptionPlanScreen(
+        builder: (context) => CalculatorSchemeScreen(
           investmentAmount: amountToPass,
           durationMonths: _selectedNoOfEmis!,
+          isEmi: emiText.isNotEmpty,
         ),
       ),
     );
@@ -638,6 +639,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       alignment: Alignment.center,
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
+          dropdownColor: Colors.white,
+          menuMaxHeight: 300,
           value: value,
           hint: Text(
             hintText,

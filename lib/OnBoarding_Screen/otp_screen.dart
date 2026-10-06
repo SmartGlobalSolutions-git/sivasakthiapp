@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'package:pinput/pinput.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/device_location_service.dart';
 import 'terms_condition_screen.dart';
 
@@ -148,6 +149,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       }
 
       if (!isError) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('cus_id', widget.cusId);
+        await prefs.setString('token', widget.token);
+        
         Navigator.of(context).push(
           PageRouteBuilder(
             transitionDuration: Duration.zero,

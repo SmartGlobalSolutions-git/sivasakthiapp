@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../services/device_location_service.dart';
 // ---- Figma tokens (Contact Us) ----
 class _Colors {
   static const Color pageBg = Color(0xFFF2F3F5);
@@ -30,15 +34,76 @@ class _TextStyles {
   );
 }
 
-class ContactUsScreen extends StatelessWidget {
+class ContactUsScreen extends StatefulWidget {
   const ContactUsScreen({super.key});
+
+  @override
+  State<ContactUsScreen> createState() => _ContactUsScreenState();
+}
+
+class _ContactUsScreenState extends State<ContactUsScreen> {
+  bool _isLoading = true;
+  String _generalPhone = '';
+  String _customerPhone = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchContactInfo();
+  }
+
+  Future<void> _fetchContactInfo() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6012',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Contact Support API Response: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['contact'] != null) {
+          if (mounted) {
+            setState(() {
+              _generalPhone = data['contact']['general_phone'] ?? '';
+              _customerPhone = data['contact']['customer_phone'] ?? '';
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching contact info: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _Colors.pageBg,
       appBar: const _Header(title: 'Contact Us'),
-      body: Padding(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : Padding(
         padding: const EdgeInsets.fromLTRB(16, 24, 16, 0),
         child: Align(
           alignment: Alignment.topCenter,
@@ -65,15 +130,29 @@ class ContactUsScreen extends StatelessWidget {
                   children: [
                     _ContactRow(
                       title: 'General Enquiry',
-                      onTap: () {
-                        // TODO: General Enquiry action (dial / open)
+                      onTap: () async {
+                        if (_generalPhone.isNotEmpty) {
+                          final Uri url = Uri.parse('tel:$_generalPhone');
+                          try {
+                            await launchUrl(url);
+                          } catch (e) {
+                            debugPrint('Could not launch $_generalPhone');
+                          }
+                        }
                       },
                     ),
                     Container(height: 0.2, color: _Colors.divider),
                     _ContactRow(
                       title: 'Agent Call',
-                      onTap: () {
-                        // TODO: Agent Call action (dial / open)
+                      onTap: () async {
+                        if (_customerPhone.isNotEmpty) {
+                          final Uri url = Uri.parse('tel:$_customerPhone');
+                          try {
+                            await launchUrl(url);
+                          } catch (e) {
+                            debugPrint('Could not launch $_customerPhone');
+                          }
+                        }
                       },
                     ),
                   ],

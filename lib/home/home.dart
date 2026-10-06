@@ -1,5 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
+
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'package:siva_sakthi/bottom_navbar.dart';
 import 'package:siva_sakthi/home/available_chit_screen.dart';
 import 'package:siva_sakthi/home/chit_schem_screen.dart';
@@ -9,7 +15,6 @@ import 'package:siva_sakthi/setting/about_us.dart';
 import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/my_chit/my_chits_screen.dart' hide ChitItem;
-import 'package:siva_sakthi/payment/payment_review.dart';
 import 'package:siva_sakthi/payment/enter_payment.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
 import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
@@ -53,11 +58,54 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   int _noOfEmis = 20;
   int _noOfMembers = 20;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  String _userName = 'Loading...';
 
   @override
   void initState() {
     super.initState();
     _startBannerAutoScroll();
+    _fetchProfileName();
+  }
+
+  Future<void> _fetchProfileName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String savedCusId = prefs.getString('cus_id') ?? '1';
+
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6010',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'cus_id': savedCusId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['error'] == false) {
+          if (mounted) {
+            setState(() {
+              final String fetchedName = data['name']?.toString().trim() ?? '';
+              _userName = fetchedName.isEmpty ? 'User' : fetchedName;
+            });
+          }
+        } else {
+          if (mounted) setState(() => _userName = 'User');
+        }
+      } else {
+        if (mounted) setState(() => _userName = 'User');
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile in home.dart: $e');
+      if (mounted) setState(() => _userName = 'User');
+    }
   }
 
   void _startBannerAutoScroll() {
@@ -97,7 +145,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
         backgroundColor: Colors.white,
         elevation: 16,
         shape: const RoundedRectangleBorder(),
-        child: const ProfileMenuScreen(),
+        child: ProfileMenuScreen(userName: _userName),
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -156,7 +204,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           ),
           SizedBox(width: w(16)),
           Text(
-            'Hello Akhil',
+            'Hello $_userName',
             style: TextStyle(
               color: kBlack,
               fontSize: 15,
@@ -711,225 +759,11 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag handle bar
-              Center(
-                child: Container(
-                  width: 38,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Header title and close icon
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Need help?',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF1F5F9),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        size: 20,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                "We're here to assist with your chit plans & queries.",
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Card 1: General Enquiry
-              _buildHelpCard(
-                icon: Icons.call_outlined,
-                title: 'General Enquiry',
-                subtitle: 'Account, group & plan queries',
-                badgeText: '9 AM - 6 PM',
-                badgeBgColor: const Color(0xFFDCFCE7),
-                badgeTextColor: const Color(0xFF15803D),
-                phoneText: '+91 90 4783 4783',
-                onCallTap: () {},
-              ),
-              const SizedBox(height: 14),
-              // Card 2: Collection Support
-              _buildHelpCard(
-                icon: Icons.headset_mic_outlined,
-                title: 'Collection Support',
-                subtitle: 'Payment, dues & settlement',
-                badgeText: 'Priority',
-                badgeBgColor: const Color(0xFFF1F5F9),
-                badgeTextColor: const Color(0xFF64748B),
-                phoneText: '+91 98 4329 9444',
-                onCallTap: () {},
-              ),
-              const SizedBox(height: 10),
-            ],
-          ),
-        );
-      },
+      builder: (context) => const _NeedHelpBottomSheetContent(),
     );
   }
 
-  Widget _buildHelpCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String badgeText,
-    required Color badgeBgColor,
-    required Color badgeTextColor,
-    required String phoneText,
-    required VoidCallback onCallTap,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-      ),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
-                ),
-                alignment: Alignment.center,
-                child: Icon(icon, color: const Color(0xFF334155), size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w400,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: badgeBgColor,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  badgeText,
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w600,
-                    color: badgeTextColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                phoneText,
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0F172A),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: onCallTap,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kBlue,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Call',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      color: Colors.white,
-                      size: 15,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+
 
   // ---------------- Let's Plan Your Growth ----------------
   Widget _buildPlanYourGrowth(
@@ -1559,6 +1393,315 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
     );
   }
 }
+
+class _NeedHelpBottomSheetContent extends StatefulWidget {
+  const _NeedHelpBottomSheetContent();
+
+  @override
+  State<_NeedHelpBottomSheetContent> createState() => _NeedHelpBottomSheetContentState();
+}
+
+class _NeedHelpBottomSheetContentState extends State<_NeedHelpBottomSheetContent> {
+  bool _isLoading = true;
+  String _generalPhone = '';
+  String _customerPhone = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchContactInfo();
+  }
+
+  Future<void> _fetchContactInfo() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6012',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint('Home Need Help API Response: ${response.body}');
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['contact'] != null) {
+          if (mounted) {
+            setState(() {
+              _generalPhone = data['contact']['general_phone'] ?? '';
+              _customerPhone = data['contact']['customer_phone'] ?? '';
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching contact info: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Drag handle bar
+          Center(
+            child: Container(
+              width: 38,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE2E8F0),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Header title and close icon
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                'Need help?',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.pop(context),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFF1F5F9),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    size: 20,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            "We're here to assist with your chit plans & queries.",
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 20),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else ...[
+            // Card 1: General Enquiry
+            _buildHelpCard(
+              icon: Icons.call_outlined,
+              title: 'General Enquiry',
+              subtitle: 'Account, group & plan queries',
+              badgeText: '9 AM - 6 PM',
+              badgeBgColor: const Color(0xFFDCFCE7),
+              badgeTextColor: const Color(0xFF15803D),
+              phoneText: '+91 $_generalPhone',
+              onCallTap: () async {
+                if (_generalPhone.isNotEmpty) {
+                  final Uri url = Uri.parse('tel:$_generalPhone');
+                  try {
+                    await launchUrl(url);
+                  } catch (e) {
+                    debugPrint('Could not launch $_generalPhone');
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 14),
+            // Card 2: Collection Support
+            _buildHelpCard(
+              icon: Icons.headset_mic_outlined,
+              title: 'Collection Support',
+              subtitle: 'Payment, dues & settlement',
+              badgeText: 'Priority',
+              badgeBgColor: const Color(0xFFF1F5F9),
+              badgeTextColor: const Color(0xFF64748B),
+              phoneText: '+91 $_customerPhone',
+              onCallTap: () async {
+                if (_customerPhone.isNotEmpty) {
+                  final Uri url = Uri.parse('tel:$_customerPhone');
+                  try {
+                    await launchUrl(url);
+                  } catch (e) {
+                    debugPrint('Could not launch $_customerPhone');
+                  }
+                }
+              },
+            ),
+          ],
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildHelpCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String badgeText,
+    required Color badgeBgColor,
+    required Color badgeTextColor,
+    required String phoneText,
+    required VoidCallback onCallTap,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+      ),
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: const Color(0xFF334155), size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeBgColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  badgeText,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                    color: badgeTextColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                phoneText,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: onCallTap,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF3C93F4),
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Call',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 15,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 
 // ---------------- Dotted Border Painter ----------------
 class _DottedBorderPainter extends CustomPainter {

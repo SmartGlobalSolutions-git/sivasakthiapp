@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 import 'yes_no_login_screen.dart';
 import 'terms_condition_screen.dart';
@@ -225,6 +226,14 @@ class GetStartedScreen extends StatelessWidget {
                                     if (permission == LocationPermission.denied) {
                                       await Geolocator.requestPermission();
                                     }
+                                  } catch (_) {}
+                                  
+                                  try {
+                                    await FirebaseMessaging.instance.requestPermission(
+                                      alert: true,
+                                      badge: true,
+                                      sound: true,
+                                    );
                                   } catch (_) {}
                                   
                                   if (!context.mounted) return;
