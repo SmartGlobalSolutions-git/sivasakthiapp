@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/payment/payment_method.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
+import 'package:siva_sakthi/payment/widget.dart';
 
 class ReviewPayScreen extends StatelessWidget {
   final List<ChitPayItem> payItems;
@@ -10,40 +12,43 @@ class ReviewPayScreen extends StatelessWidget {
     this.payItems = const [],
   });
 
-  static const _blue = Color(0xFF3C93F4);
-  static const _bg = Color(0xFFF4F4F4);
-  static const _border = Color(0xFFD4D4D4);
-  static const _black60 = Color(0x99000000);
-  static const _black80 = Color(0xCC000000);
-
-  TextStyle _t(double size, FontWeight w, Color c) =>
-      TextStyle(fontFamily: 'Inter',
-          fontSize: size,
-          fontWeight: w,
-          color: c,
-          height: 1.0);
+  static const Color kTileBg = Color(0xFFFAFAFA);
+  static const Color kTileBorder = Color(0xFFE5E7EB);
+  static const Color kLine = Color(0xFFD1D5DB);
 
   int get totalAmount =>
       payItems.isEmpty
           ? 25000
           : payItems.fold(0, (sum, item) => sum + item.payingAmount);
 
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      titleSpacing: 0,
+      centerTitle: false,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
+        onPressed: () => Navigator.maybePop(context),
+      ),
+      title: Text(
+        'Review & Pay',
+        style: GoogleFonts.manrope(
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+          color: Colors.black,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
-      appBar: AppBar(
-        backgroundColor: _bg,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleSpacing: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
-          onPressed: () => Navigator.maybePop(context),
-        ),
-        title: Text(
-            'Review & Pay', style: _t(16, FontWeight.w500, Colors.black)),
-      ),
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(context),
       body: SafeArea(
         child: Column(
           children: [
@@ -79,13 +84,17 @@ class ReviewPayScreen extends StatelessWidget {
                         ),
                       ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _blue,
+                    backgroundColor: kPayBlue,
                     elevation: 0,
                     shape: const StadiumBorder(),
                   ),
                   child: Text(
                     'Pay ₹ ${formatInr(totalAmount)}',
-                    style: _t(14, FontWeight.w500, Colors.white),
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
@@ -96,7 +105,6 @@ class ReviewPayScreen extends StatelessWidget {
     );
   }
 
-  // ---------- My Chits Overview (328 x ~397, radius 16, border 1px #D4D4D4) ----------
   Widget _overviewCard() {
     final items = payItems.isNotEmpty
         ? payItems
@@ -108,31 +116,44 @@ class ReviewPayScreen extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        color: _bg,
+        color: kTileBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border, width: 1),
+        border: Border.all(color: kTileBorder, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('My Chits Overview',
-              style: _t(16, FontWeight.w500, Colors.black)),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: kPayText,
+              )),
           const SizedBox(height: 12),
-          const Divider(height: 1, color: _border),
+          Container(height: 1, color: kTileBorder),
           for (int i = 0; i < items.length; i++) ...[
             const SizedBox(height: 14),
             _chitBlock(items[i]),
             const SizedBox(height: 14),
-            const Divider(height: 1, color: _border),
+            if (i != items.length - 1)
+              Container(height: 1, color: kLine),
           ],
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Total Amount to Pay',
-                  style: _t(14, FontWeight.w400, _black80)),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w400,
+                    color: kPayGrey,
+                  )),
               Text('₹ ${formatInr(totalAmount)}',
-                  style: _t(20, FontWeight.w600, _blue)),
+                  style: GoogleFonts.inter(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: kPayBlue,
+                  )),
             ],
           ),
         ],
@@ -142,29 +163,46 @@ class ReviewPayScreen extends StatelessWidget {
 
   Widget _chitBlock(ChitPayItem item) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Chit Amount', style: _t(12, FontWeight.w400, _black60)),
+            Text('Chit Amount',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  height: 16 / 12,
+                  color: kPayGrey,
+                )),
             Row(children: [
-              Text('Chit ID', style: _t(12, FontWeight.w400, _black60)),
-              const SizedBox(width: 4),
-              Text(item.chit.chitId, style: _t(14.45, FontWeight.w500, _blue)),
+              Text('Chit ID  ',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    height: 16 / 12,
+                    color: kPayGrey,
+                  )),
+              Text(item.chit.chitId,
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    height: 16 / 12,
+                    fontWeight: FontWeight.w500,
+                    color: kPayBlue,
+                  )),
             ]),
           ],
         ),
-        const SizedBox(height: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Text('₹ ${formatInr(item.chit.chitAmount)}',
-              style: _t(21.82, FontWeight.w600, _blue)),
-        ),
+        const SizedBox(height: 4),
+        Text('₹ ${formatInr(item.chit.chitAmount)}',
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              height: 26 / 20,
+              fontWeight: FontWeight.w500,
+              color: kPayBlue,
+            )),
         const SizedBox(height: 10),
-        _amountRow(
-            'Due Amount', '₹ ${formatInr(item.chit.dueAmount)}', Colors.black),
+        _amountRow('Due Amount', '₹ ${formatInr(item.chit.dueAmount)}', kPayText),
         const SizedBox(height: 8),
-        _amountRow('Paying Amount', '₹ ${formatInr(item.payingAmount)}', _blue),
+        _amountRow('Paying Amount', '₹ ${formatInr(item.payingAmount)}', kPayBlue),
       ],
     );
   }
@@ -173,8 +211,19 @@ class ReviewPayScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: _t(14, FontWeight.w400, _black80)),
-        Text(value, style: _t(14, FontWeight.w600, valueColor)),
+        Text(label,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 20 / 14,
+              color: kPayText,
+            )),
+        Text(value,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              height: 20 / 14,
+              color: valueColor,
+              fontWeight: valueColor == kPayBlue ? FontWeight.w600 : FontWeight.w400,
+            )),
       ],
     );
   }
@@ -191,15 +240,15 @@ class ReviewPayScreen extends StatelessWidget {
       height: 89,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: _bg,
+        color: kTileBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border, width: 1),
+        border: Border.all(color: kTileBorder, width: 1),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           _infoRow('assets/icons/pay_account.png', 'A/C No : ', acNo),
-          const Divider(height: 1, color: _border),
+          Container(height: 1, color: kTileBorder),
           _infoRow('assets/icons/pay_upi.png', 'UPI ID : ', upiId),
         ],
       ),
@@ -214,8 +263,20 @@ class ReviewPayScreen extends StatelessWidget {
           Image.asset(icon, width: 24, height: 24),
           const SizedBox(width: 10),
           Text.rich(TextSpan(children: [
-            TextSpan(text: label, style: _t(16, FontWeight.w500, _black60)),
-            TextSpan(text: value, style: _t(16, FontWeight.w500, _blue)),
+            TextSpan(
+                text: label,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: kPayGrey,
+                )),
+            TextSpan(
+                text: value,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: kPayBlue,
+                )),
           ])),
         ],
       ),

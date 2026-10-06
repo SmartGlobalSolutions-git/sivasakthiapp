@@ -3,6 +3,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/payment/payment.dart';
 import 'package:siva_sakthi/payment/payment_detail_sheet.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
+import 'package:siva_sakthi/home/home.dart';
+import 'package:siva_sakthi/home/notification.dart';
+import 'package:siva_sakthi/setting/need_help.dart';
 
 enum PaymentStatus { pending, approved }
 
@@ -131,26 +134,100 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   }
 
   // ---------------- App bar (this screen only) ----------------
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF4F5F7),
       elevation: 0,
       scrolledUnderElevation: 0,
       automaticallyImplyLeading: false,
-      titleSpacing: 0,
       centerTitle: false,
+      titleSpacing: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
-        onPressed: () => Navigator.maybePop(context),
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF1E2638), size: 22),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SivaSakthiHomeScreen()),
+              (route) => false,
+            );
+          }
+        },
       ),
       title: Text(
         'Payment History',
         style: GoogleFonts.inter(
           fontSize: 16,
-          fontWeight: FontWeight.w500,
-          color: Colors.black,
+          fontWeight: FontWeight.w400,
+          color: const Color(0xFF1E2638),
         ),
       ),
+      actions: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFD0D5DD), width: 0.8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/help_operator.png',
+                  width: 14,
+                  height: 14,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.headset_mic,
+                    size: 14,
+                    color: Color(0xFF3C93F4),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Need Help ?',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF3C93F4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        IconButton(
+          icon: Image.asset(
+            'assets/images/notification.png',
+            width: 20,
+            height: 20,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.notifications_none, color: Color(0xFF1E2638)),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(width: 6),
+      ],
     );
   }
 
@@ -158,7 +235,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBg,
-      appBar: _buildAppBar(),
+      appBar: _buildAppBar(context),
       body: Column(
         children: [
           _buildTabBar(),

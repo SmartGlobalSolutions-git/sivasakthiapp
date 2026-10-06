@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:siva_sakthi/chat_bot/chat.dart';
 
 // ---- Figma tokens (Need Help?) ----
 class _Colors {
@@ -133,7 +134,7 @@ class NeedHelpScreen extends StatelessWidget {
             const SizedBox(height: 16),
             Center(
               child: _ChatButton(onTap: () {
-                // TODO: open chat
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ChatbotScreen()));
               }),
             ),
             const SizedBox(height: 18),

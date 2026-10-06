@@ -4,6 +4,7 @@ import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/setting/privacy_policy.dart';
 import 'package:siva_sakthi/setting/profile_info.dart';
 import 'package:siva_sakthi/setting/terms_condition.dart';
+import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:siva_sakthi/OnBoarding_Screen/login_screen.dart';
 
@@ -310,7 +311,9 @@ class _SettingScreenState extends State<SettingScreen> {
                 iconAsset: 'assets/setting/help_sup.png',
                 fallback: Icons.support_agent_outlined,
                 title: 'Help & Support',
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const NeedHelpScreen()),
+                ),
               ),
               _rowDivider(w),
               _settingRow(

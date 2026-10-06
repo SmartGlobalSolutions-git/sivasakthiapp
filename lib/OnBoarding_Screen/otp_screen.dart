@@ -396,13 +396,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               width: double.infinity,
                               height: 52,
                               child: ElevatedButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () {
-                                        if (isOtpReady) {
-                                          _onVerify();
-                                        }
-                                      },
+                                onPressed: _isLoading ? null : _onVerify,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF3C93F4),
                                   foregroundColor: Colors.white,

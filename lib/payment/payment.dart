@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/bottom_navbar.dart';
 import 'package:siva_sakthi/payment/payment_history.dart';
 import 'package:siva_sakthi/payment/enter_payment.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
+import 'package:siva_sakthi/home/home.dart';
+import 'package:siva_sakthi/home/notification.dart';
+import 'package:siva_sakthi/setting/need_help.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -94,28 +98,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        surfaceTintColor: Colors.transparent,
-        leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back,
-            color: Color(0xFF1E293B),
-            size: 24,
-          ),
-          onPressed: () {
-            if (Navigator.canPop(context)) {
-              Navigator.pop(context);
-            }
-          },
-        ),
-        titleSpacing: 0,
-        title: Text(
-          'Payment',
-          style: _t(16, FontWeight.w500, Colors.black),
-        ),
-      ),
+      appBar: _buildAppBar(context),
       body: Column(
         children: [
           // Top Segmented Tabs Bar
@@ -158,32 +141,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 });
               },
               child: Container(
+                alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   color: _selectedTabIndex == 0
-                      ? const Color(0xFFEFF6FF)
+                      ? const Color(0xFFE0EEFF)
                       : Colors.white,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: _selectedTabIndex == 0
-                          ? const Color(0xFF2563EB)
-                          : Colors.transparent,
-                      width: 2.5,
-                    ),
-                  ),
+                  border: _selectedTabIndex == 0
+                      ? const Border(
+                          bottom: BorderSide(
+                            color: Color(0xFF3C93F4),
+                            width: 2.0,
+                          ),
+                        )
+                      : null,
                 ),
                 child: Text(
                   'My Chits Overview',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
                     fontWeight: _selectedTabIndex == 0
-                        ? FontWeight.w600
-                        : FontWeight.w500,
+                        ? FontWeight.w500
+                        : FontWeight.w400,
                     color: _selectedTabIndex == 0
-                        ? const Color(0xFF2563EB)
-                        : const Color(0xFF64748B),
+                        ? const Color(0xFF3C93F4)
+                        : const Color(0xFF6B7280),
                   ),
                 ),
               ),
@@ -205,32 +188,32 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 );
               },
               child: Container(
+                alignment: Alignment.center,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
                   color: _selectedTabIndex == 1
-                      ? const Color(0xFFEFF6FF)
+                      ? const Color(0xFFE0EEFF)
                       : Colors.white,
-                  border: Border(
-                    bottom: BorderSide(
-                      color: _selectedTabIndex == 1
-                          ? const Color(0xFF2563EB)
-                          : Colors.transparent,
-                      width: 2.5,
-                    ),
-                  ),
+                  border: _selectedTabIndex == 1
+                      ? const Border(
+                          bottom: BorderSide(
+                            color: Color(0xFF3C93F4),
+                            width: 2.0,
+                          ),
+                        )
+                      : null,
                 ),
                 child: Text(
                   'Payment History',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15,
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
                     fontWeight: _selectedTabIndex == 1
-                        ? FontWeight.w600
-                        : FontWeight.w500,
+                        ? FontWeight.w500
+                        : FontWeight.w400,
                     color: _selectedTabIndex == 1
-                        ? const Color(0xFF2563EB)
-                        : const Color(0xFF64748B),
+                        ? const Color(0xFF3C93F4)
+                        : const Color(0xFF6B7280),
                   ),
                 ),
               ),
@@ -302,7 +285,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                       acNo: item.accountNumber,
                                       upiId: item.upiId,
                                       status: 'Running',
-                                      chitAmount: 100000,
+                                      chitAmount: int.tryParse(item.chitValue.replaceAll(RegExp(r'[^0-9]'), '')) ?? 0,
                                       dueAmount: item.payableAmount,
                                     ))
                                 .toList();
@@ -311,9 +294,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => EnterPaymentAmountScreen(
-                                  chits: selectedChits.isNotEmpty
-                                      ? selectedChits
-                                      : sampleChits,
+                                  chits: selectedChits,
                                 ),
                               ),
                             );
@@ -321,12 +302,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF3C93F4),
-                      disabledBackgroundColor: const Color(0xFF94A3B8),
+                      disabledBackgroundColor: const Color(0xFF3C93F4),
+                      disabledForegroundColor: Colors.white,
                       elevation: 0,
                       shape: const StadiumBorder(),
                     ),
                     child: Text(
-                      'Pay ₹ ${_formatCurrency(_totalPayableAmount > 0 ? _totalPayableAmount : 12500)}',
+                      _selectedCount > 0 ? 'Pay ₹ ${_formatCurrency(_totalPayableAmount)}' : 'Pay',
                       style: _t(14, FontWeight.w500, Colors.white),
                     ),
                   ),
@@ -342,29 +324,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget _buildChitCard(ChitPaymentItem item, int index) {
     return GestureDetector(
       onTap: () {
-        final chitItem = ChitItem(
-          chitId: item.accountNumber,
-          name: item.name,
-          groupDetail: item.groupDetail,
-          role: item.userType,
-          chitValue: item.chitValue,
-          dateRange: '${item.startDate} - ${item.endDate}',
-          runningBalance: item.runningBalance,
-          acNo: item.accountNumber,
-          upiId: item.upiId,
-          status: 'Running',
-          chitAmount: 100000,
-          dueAmount: item.payableAmount,
-        );
-
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => EnterPaymentAmountScreen(
-              chits: [chitItem],
-            ),
-          ),
-        );
+        setState(() {
+          item.isSelected = !item.isSelected;
+        });
       },
       child: Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -389,7 +351,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            // Decorative subtle top-right blue wave/accent background
             Positioned(
               right: 0,
               top: 0,
@@ -475,8 +436,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             Text(
                               item.name,
                               style: const TextStyle(
-                                fontSize: 17.5,
-                                fontWeight: FontWeight.w700,
+                                fontFamily: 'Inter',
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w600,
                                 color: Color(0xFF1E293B),
                               ),
                             ),
@@ -484,7 +446,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             RichText(
                               text: TextSpan(
                                 style: const TextStyle(
-                                  fontSize: 13.5,
+                                  fontSize: 12.0,
                                   fontFamily: 'Inter',
                                 ),
                                 children: [
@@ -492,14 +454,14 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                     text: 'Group Detail ',
                                     style: TextStyle(
                                       color: Color(0xFF64748B),
-                                      fontWeight: FontWeight.w500,
+                                      fontWeight: FontWeight.w400,
                                     ),
                                   ),
                                   TextSpan(
                                     text: item.groupDetail,
                                     style: const TextStyle(
                                       color: Color(0xFF2563EB),
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
@@ -543,8 +505,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             Text(
                               item.userType,
                               style: const TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter',
+                                fontSize: 11.0,
+                                fontWeight: FontWeight.w500,
                                 color: Color(0xFF2563EB),
                               ),
                             ),
@@ -622,141 +585,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
 
-                  // --- BOTTOM ROW: Bank A/C No & UPI ID ---
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 221, 235, 250).withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Row(
-                      children: [
-                        // Bank A/C No (Bank icon in blue with darker background)
-                        Expanded(
-                          flex: 5,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: const BoxDecoration(
-                                  color: Color.fromARGB(255, 247, 247, 248), // Darker prominent background
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Image.asset(
-                                  'assets/icons/bank.png',
-                                  width: 20,
-                                  height: 20,
-                                  color: const Color(0xFF1D4ED8),
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                    Icons.account_balance,
-                                    size: 18,
-                                    color: Color(0xFF1D4ED8),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'A/C No:',
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color.fromARGB(255, 249, 249, 250),
-                                      ),
-                                    ),
-                                    Text(
-                                      item.accountNumber,
-                                      style: const TextStyle(
-                                        fontSize: 13.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Vertical Divider
-                        Container(
-                          width: 1,
-                          height: 32,
-                          margin: const EdgeInsets.symmetric(horizontal: 6),
-                          color: const Color(0xFFCBD5E1),
-                        ),
-
-                        // UPI ID (Keep original color)
-                        Expanded(
-                          flex: 6,
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Image.asset(
-                                  'assets/icons/upi.png',
-                                  width: 22,
-                                  height: 22,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                    Icons.payment,
-                                    size: 18,
-                                    color: Color(0xFF2563EB),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'UPI ID:',
-                                      style: TextStyle(
-                                        fontSize: 11.5,
-                                        fontWeight: FontWeight.w500,
-                                        color: Color(0xFF64748B),
-                                      ),
-                                    ),
-                                    Text(
-                                      item.upiId,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0F172A),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -780,29 +609,19 @@ class _PaymentScreenState extends State<PaymentScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Round Icon Container
-          Container(
-            width: 30,
-            height: 30,
-            decoration: const BoxDecoration(
-              color: Color(0xFFEFF6FF),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Image.asset(
-              iconPath,
-              width: 17,
-              height: 17,
-              color: iconColor,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Icon(
-                fallbackIcon,
-                size: 16,
-                color: iconColor ?? const Color(0xFF2563EB),
-              ),
+          Image.asset(
+            iconPath,
+            width: 13,
+            height: 13,
+            color: iconColor,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              fallbackIcon,
+              size: 13,
+              color: iconColor ?? const Color(0xFF2563EB),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 7),
 
           // Label and Value
           Expanded(
@@ -814,16 +633,20 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   label,
                   maxLines: 1,
                   style: const TextStyle(
-                    fontSize: 10.5,
+                    fontFamily: 'Inter',
+                    fontSize: 10.0,
                     fontWeight: FontWeight.w500,
                     color: Color(0xFF64748B),
                   ),
                 ),
-                const SizedBox(height: 1),
+                const SizedBox(height: 2),
                 Text(
                   value,
+                  maxLines: isMultiLine ? 2 : 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: isMultiLine ? 11.5 : 13.5,
+                    fontFamily: 'Inter',
+                    fontSize: isMultiLine ? 11.0 : 12.0,
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0F172A),
                     height: isMultiLine ? 1.15 : 1.2,
@@ -954,6 +777,103 @@ class _PaymentScreenState extends State<PaymentScreen> {
           ),
         );
       },
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: const Color(0xFFF4F5F7),
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      automaticallyImplyLeading: false,
+      centerTitle: false,
+      titleSpacing: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Color(0xFF1E2638), size: 22),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SivaSakthiHomeScreen()),
+              (route) => false,
+            );
+          }
+        },
+      ),
+      title: Text(
+        'Payment',
+        style: GoogleFonts.inter(
+          fontSize: 16,
+          fontWeight: FontWeight.w400,
+          color: const Color(0xFF1E2638),
+        ),
+      ),
+      actions: [
+        GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFD0D5DD), width: 0.8),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/help_operator.png',
+                  width: 14,
+                  height: 14,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) => const Icon(
+                    Icons.headset_mic,
+                    size: 14,
+                    color: Color(0xFF3C93F4),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Need Help ?',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF3C93F4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        IconButton(
+          icon: Image.asset(
+            'assets/images/notification.png',
+            width: 20,
+            height: 20,
+            fit: BoxFit.contain,
+            errorBuilder: (context, error, stackTrace) =>
+                const Icon(Icons.notifications_none, color: Color(0xFF1E2638)),
+          ),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const NotificationScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(width: 6),
+      ],
     );
   }
 }

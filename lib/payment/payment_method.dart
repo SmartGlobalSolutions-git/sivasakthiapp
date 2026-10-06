@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
 import 'package:siva_sakthi/payment/payment_proof.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
   final List<ChitPayItem> payItems;
@@ -28,8 +29,7 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
 
   TextStyle _t(double size, FontWeight w, Color c,
           {double? height, double? spacing}) =>
-      TextStyle(
-          fontFamily: 'Inter',
+      GoogleFonts.inter(
           fontSize: size,
           fontWeight: w,
           color: c,
@@ -49,7 +49,14 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.black, size: 22),
           onPressed: () => Navigator.maybePop(context),
         ),
-        title: Text('Payment Methods', style: _t(16, FontWeight.w500, Colors.black)),
+        title: Text(
+          'Payment Methods',
+          style: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
+        ),
       ),
       body: Column(
         children: [

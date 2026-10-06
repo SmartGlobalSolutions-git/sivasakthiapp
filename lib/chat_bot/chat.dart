@@ -22,25 +22,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       'hasToolCard': false,
       'isTyping': false,
     },
-    {
-      'isUser': true,
-      'text': "How do I calculate my dividend?",
-      'hasToolCard': false,
-      'isTyping': false,
-    },
-    {
-      'isUser': false,
-      'text':
-      "You can calculate your potential dividend for upcoming auctions using our Bid Calculator. It considers the total pot, your bid amount, and the number of active participants.",
-      'hasToolCard': true,
-      'isTyping': false,
-    },
-    {
-      'isUser': false,
-      'text': '...',
-      'hasToolCard': false,
-      'isTyping': true,
-    },
   ];
 
   void _sendMessage() {
@@ -48,25 +29,85 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     if (text.isEmpty) return;
 
     setState(() {
-      // Insert before typing indicator
-      _messages.insert(_messages.length - 1, {
+      // Add user message
+      _messages.add({
         'isUser': true,
         'text': text,
         'hasToolCard': false,
         'isTyping': false,
       });
+      // Add typing indicator
+      _messages.add({
+        'isUser': false,
+        'text': '...',
+        'hasToolCard': false,
+        'isTyping': true,
+      });
       _messageController.clear();
     });
 
-    Future.delayed(const Duration(milliseconds: 300), () {
+    _scrollToBottom();
+
+    // Simulate network delay for bot reply
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!mounted) return;
+      setState(() {
+        // Remove typing indicator
+        _messages.removeLast();
+
+        final response = _generateBotResponse(text);
+        _messages.add({
+          'isUser': false,
+          'text': response['text'],
+          'hasToolCard': response['hasToolCard'],
+          'isTyping': false,
+        });
+      });
+      _scrollToBottom();
+    });
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent + 80,
+          _scrollController.position.maxScrollExtent + 100,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
       }
     });
+  }
+
+  Map<String, dynamic> _generateBotResponse(String input) {
+    final lower = input.toLowerCase();
+    
+    if (lower.contains('chit') || lower.contains('scheme') || lower.contains('plan')) {
+      return {
+        'text': "We offer various Chit Schemes ranging from ₹1,00,000 to ₹50,000,000 with flexible durations like 20, 30, 40, or 50 months. You can view them in the 'New Chits' section.",
+        'hasToolCard': false,
+      };
+    } else if (lower.contains('pay') || lower.contains('due') || lower.contains('pending')) {
+      return {
+        'text': "You can easily pay your chit dues online via UPI, Net Banking, or by scanning our QR code. Navigate to the 'My Chits' or 'Payment' tab to clear pending dues.",
+        'hasToolCard': false,
+      };
+    } else if (lower.contains('auction') || lower.contains('bid') || lower.contains('dividend') || lower.contains('calculate')) {
+      return {
+        'text': "You can calculate your potential dividend for upcoming auctions using our Bid Calculator. It considers the total pot, your bid amount, and the number of active participants.",
+        'hasToolCard': true,
+      };
+    } else if (lower.contains('hi') || lower.contains('hello') || lower.contains('hey')) {
+      return {
+        'text': "Hello again! Let me know if you need any details about our chit schemes, payments, or upcoming auctions.",
+        'hasToolCard': false,
+      };
+    } else {
+      return {
+        'text': "Thank you for reaching out! To give you the most accurate answer regarding that, please explore the app sections or contact our support team.",
+        'hasToolCard': false,
+      };
+    }
   }
 
   @override

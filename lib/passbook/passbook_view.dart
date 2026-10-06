@@ -36,7 +36,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
   static const Color kHeaderDivider = Color(0xFF3C93F4);
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);
-  static const Color kStripe = Color(0x80E5E5E5); // #E5E5E5 @ 50%
+  static const Color kStripe = Color(0x80E5E5E5);
   static const double _borderWidth = 0.84;
 
   static const List<String> _labels = [

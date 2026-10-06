@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 
 import '../services/device_location_service.dart';
 import 'otp_screen.dart';
+import 'yes_no_login_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -260,7 +261,12 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const UserTypeSelectionScreen()),
+                      );
+                    },
                     icon: const Icon(
                       Icons.arrow_back,
                       color: Color(0xFF101828),

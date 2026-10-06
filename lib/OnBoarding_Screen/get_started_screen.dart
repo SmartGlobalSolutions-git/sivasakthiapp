@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'yes_no_login_screen.dart';
 import 'terms_condition_screen.dart';
@@ -218,7 +219,16 @@ class GetStartedScreen extends StatelessWidget {
                             child: SizedBox(
                               height: 50,
                               child: ElevatedButton(
-                                onPressed: () {
+                                onPressed: () async {
+                                  try {
+                                    LocationPermission permission = await Geolocator.checkPermission();
+                                    if (permission == LocationPermission.denied) {
+                                      await Geolocator.requestPermission();
+                                    }
+                                  } catch (_) {}
+                                  
+                                  if (!context.mounted) return;
+
                                   Navigator.of(context).push(
                                     PageRouteBuilder(
                                       transitionDuration: Duration.zero,
@@ -266,26 +276,16 @@ class GetStartedScreen extends StatelessWidget {
                                     height: 1.3,
                                   ),
                                 ),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            const TermsAndConditionScreen(),
-                                      ),
-                                    );
-                                  },
-                                  child: Text(
-                                    'Terms & Use & Privacy Policy',
-                                    textAlign: TextAlign.center,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF3C93F4),
-                                      decoration: TextDecoration.underline,
-                                      decorationColor: const Color(0xFF3C93F4),
-                                      height: 1.3,
-                                    ),
+                                Text(
+                                  'Terms & Use & Privacy Policy',
+                                  textAlign: TextAlign.center,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF3C93F4),
+                                    decoration: TextDecoration.underline,
+                                    decorationColor: const Color(0xFF3C93F4),
+                                    height: 1.3,
                                   ),
                                 ),
                               ],

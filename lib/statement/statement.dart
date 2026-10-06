@@ -62,7 +62,7 @@ class _StatementSearchScreenState extends State<StatementSearchScreen> {
         }
       } else {
         setState(() => _isLoadingChits = false);
-      }
+      } 
     } catch (e) {
       setState(() => _isLoadingChits = false);
     }

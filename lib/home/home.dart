@@ -508,31 +508,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                     ],
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ReviewPayScreen(),
-                      ),
-                    );
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'View Details',
-                        style: TextStyle(
-                          color: kBlue,
-                          fontSize: w(13),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      SizedBox(width: w(2)),
-                      Icon(Icons.chevron_right, size: w(18), color: kBlue),
-                    ],
-                  ),
-                ),
+
               ],
             ),
             SizedBox(height: h(14)),
@@ -962,7 +938,13 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   ) {
     return Container(
       width: double.infinity,
-      color: kBlue,
+      decoration: const BoxDecoration(
+        color: kBlue,
+        image: DecorationImage(
+          image: AssetImage('assets/home/lets_growth_bg.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
       padding: EdgeInsets.fromLTRB(w(16), h(24), w(16), h(28)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

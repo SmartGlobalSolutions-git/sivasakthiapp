@@ -664,9 +664,9 @@ class _HomeScreenState extends State<HomeScreen> {
           // Background blue torn paper asset (assets/images/blue_round.png)
           Positioned.fill(
             child: Image.asset(
-              'assets/images/blue_round.png',
+              'assets/home/lets_growth_bg.png',
               width: sectionWidth,
-              fit: BoxFit.fill,
+             
               errorBuilder: (context, error, stackTrace) =>
                   Container(color: primaryBlue),
             ),

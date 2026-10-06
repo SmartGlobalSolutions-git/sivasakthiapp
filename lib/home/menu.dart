@@ -44,7 +44,7 @@ class ProfileMenuScreen extends StatelessWidget {
   static const Color _cardColor = Color(0xFFF5F5F5);
   static const Color _black = Color(0xFF000000);
   static const Color _needHelpBorder = Color(0xFF9B9B9B);
-  static const Color _needHelpGreen = Color(0xFF0A8F3C);
+  static const Color _needHelpBlue = Color(0xFF3C93F4);
 
   // ---- Asset paths (PNG) ----
   static const String _profileIcon = 'assets/icons/profile_menu.png';
@@ -239,9 +239,9 @@ class ProfileMenuScreen extends StatelessWidget {
                   'Need Help ?',
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                    color: _needHelpGreen,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                    color: _needHelpBlue,
                   ),
                 ),
               ],

@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'dart:ui' show PathMetric;
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
 import 'package:siva_sakthi/payment/payment_pending.dart';
 
@@ -28,9 +31,10 @@ class _PaymentProofScreenState extends State<PaymentProofScreen> {
 
   final _utrController = TextEditingController();
   DateTime _date = DateTime.now();
+  XFile? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
-  TextStyle _t(double size, FontWeight w, Color c) => TextStyle(
-    fontFamily: 'Inter',
+  TextStyle _t(double size, FontWeight w, Color c) => GoogleFonts.inter(
     fontSize: size,
     fontWeight: w,
     color: c,
@@ -85,7 +89,11 @@ class _PaymentProofScreenState extends State<PaymentProofScreen> {
         ),
         title: Text(
           'Payment Proof',
-          style: _t(16, FontWeight.w500, Colors.black),
+          style: GoogleFonts.manrope(
+            fontSize: 16,
+            fontWeight: FontWeight.w500,
+            color: Colors.black,
+          ),
         ),
       ),
       body: Column(
@@ -122,6 +130,18 @@ class _PaymentProofScreenState extends State<PaymentProofScreen> {
               height: 48,
               child: ElevatedButton(
                 onPressed: () {
+                  if (_utrController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please enter UTR / Transaction ID')),
+                    );
+                    return;
+                  }
+                  if (_imageFile == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Please upload a payment screenshot')),
+                    );
+                    return;
+                  }
                   Navigator.push(context, MaterialPageRoute(builder: (context)=>ReceiptPendingScreen()));
                 },
                 style: ElevatedButton.styleFrom(
@@ -197,8 +217,13 @@ class _PaymentProofScreenState extends State<PaymentProofScreen> {
 
   Widget _uploadBox() {
     return GestureDetector(
-      onTap: () {
-        // TODO: pick image (image_picker), JPG/PNG up to 5MB
+      onTap: () async {
+        final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+        if (image != null) {
+          setState(() {
+            _imageFile = image;
+          });
+        }
       },
       child: CustomPaint(
         painter: _DashedBorderPainter(
@@ -209,35 +234,60 @@ class _PaymentProofScreenState extends State<PaymentProofScreen> {
           width: double.infinity,
           height: 140,
           alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 48,
-                height: 48,
-                alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE8F6EF),
-                  shape: BoxShape.circle,
+          child: _imageFile != null
+              ? Padding(
+                  padding: const EdgeInsets.all(4.0),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.file(File(_imageFile!.path), fit: BoxFit.cover),
+                        Container(
+                          color: Colors.black38,
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.edit, color: Colors.white, size: 28),
+                              const SizedBox(height: 4),
+                              Text('Tap to change', style: _t(11, FontWeight.w500, Colors.white)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              : Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE8F6EF),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.cloud_upload_outlined,
+                        size: 26,
+                        color: _blue,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Click to upload screenshot',
+                      style: _t(11, FontWeight.w600, _navy),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'JPG, PNG up to 5MB',
+                      style: _t(9, FontWeight.w400, const Color(0xFF94A3B8)),
+                    ),
+                  ],
                 ),
-                child: const Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 26,
-                  color: _blue,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Click to upload screenshot',
-                style: _t(11, FontWeight.w600, _navy),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'JPG, PNG up to 5MB',
-                style: _t(9, FontWeight.w400, const Color(0xFF94A3B8)),
-              ),
-            ],
-          ),
         ),
       ),
     );
