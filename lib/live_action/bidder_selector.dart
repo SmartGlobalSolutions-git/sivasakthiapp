@@ -25,7 +25,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
       name: 'S.Kumar',
       sliceColor: Color(0xFFDCEEFE),
       avatarBg: Color(0xFFBFDBFE),
-      avatarTextColor: Color(0xFF2563EB),
+      avatarTextColor: Color(0xff266FAF),
     ),
     WheelBidder(
       initials: 'RP',
@@ -274,7 +274,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
                                 height: 24,
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.people, size: 24, color: Colors.blue),
+                                    const Icon(Icons.people, size: 24, color: Color(0xff266FAF)),
                               ),
                               const SizedBox(width: 8),
                               Text(
@@ -302,7 +302,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
                                   fallbackColor: Colors.green,
                                   label: 'Active',
                                   value: '1',
-                                  valueColor: const Color(0xFF2563EB),
+                                  valueColor: Color(0xff266FAF),
                                 ),
                               ),
 
@@ -342,7 +342,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
                                   fallbackColor: Colors.orange,
                                   label: 'Participated\nMembers',
                                   value: '4',
-                                  valueColor: const Color(0xFF2563EB),
+                                  valueColor: Color(0xff266FAF),
                                 ),
                               ),
                             ],
@@ -391,7 +391,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
                                 height: 15,
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.swap_vert, size: 15, color: Color(0xFF2563EB)),
+                                    const Icon(Icons.swap_vert, size: 15,color:  Color(0xff266FAF)),
                               ),
                               const SizedBox(width: 6),
                               Text(
@@ -485,7 +485,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
                                   errorBuilder: (context, error, stackTrace) =>
                                       const CircleAvatar(
                                     radius: 34,
-                                    backgroundColor: Color(0xFF2563EB),
+                                    backgroundColor: Color(0xff266FAF),
                                     child: Icon(Icons.refresh, color: Colors.white, size: 34),
                                   ),
                                 ),
@@ -505,7 +505,7 @@ class _BidderSelectorScreenState extends State<BidderSelectorScreen>
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E3A8A),
+                          color: Color(0xff266FAF),
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -650,7 +650,7 @@ class BidderWheelPainter extends CustomPainter {
 
     // Outer wheel border
     final rimPaint = Paint()
-      ..color = const Color(0xFF2563EB)
+      ..color = Color(0xff266FAF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 6.5;
 

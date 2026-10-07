@@ -105,8 +105,7 @@ class UserTypeSelectionScreen extends StatelessWidget {
                                       );
                                     },
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          const Color(0xFF3C93F4),
+                                      backgroundColor:Color(0xff266FAF),
                                       foregroundColor: Colors.white,
                                       elevation: 0,
                                       shape: RoundedRectangleBorder(
@@ -141,9 +140,9 @@ class UserTypeSelectionScreen extends StatelessWidget {
                                     },
                                     style: OutlinedButton.styleFrom(
                                       foregroundColor:
-                                          const Color(0xFF3C93F4),
+                                      Color(0xff266FAF),
                                       side: const BorderSide(
-                                        color: Color(0xFF3C93F4),
+                                        color:Color(0xff266FAF),
                                         width: 1.5,
                                       ),
                                       shape: RoundedRectangleBorder(
@@ -156,7 +155,7 @@ class UserTypeSelectionScreen extends StatelessWidget {
                                       style: GoogleFonts.inter(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF3C93F4),
+                                        color: Color(0xff266FAF),
                                       ),
                                     ),
                                   ),

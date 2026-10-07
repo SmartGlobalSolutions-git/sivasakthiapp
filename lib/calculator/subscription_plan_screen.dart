@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import '../services/device_location_service.dart';
 import 'chit_enquiry_dialog.dart';
+import '../setting/need_help.dart';
+import '../home/notification.dart';
 
 class SubscriptionPlanScreen extends StatefulWidget {
   final String investmentAmount;
@@ -114,7 +116,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
     final double bottomPadding = MediaQuery.of(context).padding.bottom;
     final double scaleW = screenSize.width / 360.0;
     final double scaleH = screenSize.height / 800.0;
-    const Color primaryBlue = Color(0xFF3C93F4);
+    const Color primaryBlue =  Color(0xff266FAF);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -153,7 +155,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
               ),
               titleSpacing: 0,
               title: Text(
-                'Subscription Plan',
+                'Chit Scheme',
                 style: GoogleFonts.inter(
                   fontSize: (16 * scaleW).clamp(14.0, 18.0),
                   fontWeight: FontWeight.w400,
@@ -166,11 +168,9 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                 // Need Help ? button
                 GestureDetector(
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Support representative will contact you soon!'),
-                        duration: Duration(seconds: 2),
-                      ),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
                     );
                   },
                   child: Container(
@@ -219,7 +219,12 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
                     errorBuilder: (context, error, stackTrace) =>
                         Icon(Icons.notifications_none, size: 20 * scaleW, color: const Color(0xFF1E2638)),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const NotificationScreen()),
+                    );
+                  },
                 ),
                 SizedBox(width: 6 * scaleW),
               ],
@@ -554,7 +559,7 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           style: GoogleFonts.inriaSans(
             fontSize: 11 * scale,
             fontWeight: isMonth ? FontWeight.w700 : FontWeight.w400,
-            color: isMonth ? const Color(0xFF3C93F4) : const Color(0xFF1D2939),
+            color: isMonth ? const  Color(0xff266FAF) : const Color(0xFF1D2939),
           ),
         ),
       ),
@@ -588,14 +593,13 @@ class _SubscriptionPlanScreenState extends State<SubscriptionPlanScreen> {
           style: GoogleFonts.inriaSans(
             fontSize: 11 * scale,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF3C93F4),
+            color: Color(0xff266FAF),
           ),
         ),
       ),
     );
   }
 
-  // Top Status Bar widget matching user screenshot (11:11 AM, icons, 5G, signal, battery 50%)
   Widget _buildTopStatusBar(BuildContext context, double statusBarH) {
     final Size screenSize = MediaQuery.of(context).size;
     final double scaleW = screenSize.width / 360.0;

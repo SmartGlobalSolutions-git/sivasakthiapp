@@ -279,7 +279,7 @@ class _TermsAndConditionScreenState extends State<TermsAndConditionScreen> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3C93F4),
+                        backgroundColor: const Color(0xff266FAF),
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.zero,

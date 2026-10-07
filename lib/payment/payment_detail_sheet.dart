@@ -52,8 +52,8 @@ class PaymentDetailsSheet extends StatelessWidget {
     this.onDownloadReceipt,
   });
 
-  static const Color kBlue = Color(0xFF3C93F4);
-  static const Color kAmountBlue = Color(0xFF3C93F4);
+  static const Color kBlue = Color(0xff266FAF);
+  static const Color kAmountBlue = Color(0xff266FAF);
   static const Color kHeaderBg = Color(0xFFF0F7FF);
   static const Color kAmountBg = Color(0xFFF2F7FF);
   static const Color kSheetBorder = Color(0xFFF3F4F6);
@@ -337,7 +337,7 @@ class PaymentDetailsSheet extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onDownloadReceipt ?? () {},
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF3C93F4),
+          backgroundColor: Color(0xff266FAF),
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

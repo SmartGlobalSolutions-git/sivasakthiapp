@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
 
-const Color kPayBlue = Color(0xFF3C93F4);
+const Color kPayBlue = Color(0xff266FAF);
 const Color kPayText = Color(0xFF1B1C1C);
 const Color kPayGrey = Color(0xFF4B5563);
 

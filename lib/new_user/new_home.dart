@@ -1,10 +1,17 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
 import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
-import 'package:siva_sakthi/new_user/new_calculator.dart';
+import 'package:siva_sakthi/calculator/calculator_screen.dart';
+import 'package:siva_sakthi/calculator/calculator_scheme.dart';
 import 'package:siva_sakthi/new_user/new_menu.dart';
 import 'package:siva_sakthi/setting/about_us.dart';
+import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/home/notification.dart';
 
@@ -33,6 +40,52 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _selectedBottomNavIndex = 0;
 
+  String _generalPhone = '';
+  String _customerPhone = '';
+  String _email = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchHelpContent();
+  }
+
+  Future<void> _fetchHelpContent() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6012',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'token': token,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['error'] == false && data['contact'] != null) {
+          if (mounted) {
+            setState(() {
+              _generalPhone = data['contact']['general_phone'] ?? '';
+              _customerPhone = data['contact']['customer_phone'] ?? '';
+              _email = data['contact']['email'] ?? '';
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching help content: $e');
+    }
+  }
+
   @override
   void dispose() {
     _investmentController.dispose();
@@ -46,26 +99,181 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _handleCalculatorSubmit() {
+  bool _isLoadingPlan = false;
+
+  Future<void> _handleCalculatorSubmit() async {
     final investmentText = _investmentController.text.trim();
     final emiText = _emiController.text.trim();
 
-    final amountToPass = investmentText.isNotEmpty
-        ? investmentText
-        : (emiText.isNotEmpty ? emiText : '1,00,000');
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => SubscriptionPlanScreen(
-          investmentAmount: amountToPass,
-          durationMonths: _selectedEmis ?? '20',
+    if (investmentText.isEmpty && emiText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter Investment Amount or EMI Amount', style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
         ),
-      ),
-    );
+      );
+      return;
+    }
+
+    if (_selectedEmis == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Please select No Of EMI's", style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return;
+    }
+
+    if (_selectedMembers == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please select No Of Chit Members', style: GoogleFonts.inter(color: Colors.white)),
+          backgroundColor: Colors.black,
+          behavior: SnackBarBehavior.fixed,
+        ),
+      );
+      return;
+    }
+
+    final amountToPass = investmentText.isNotEmpty ? investmentText : emiText;
+    
+    setState(() {
+      _isLoadingPlan = true;
+    });
+
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6003',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['chit'] != null) {
+          List<dynamic> chits = data['chit'];
+          
+          int targetAmount = int.tryParse(amountToPass.replaceAll(',', '').replaceAll(' ', '')) ?? 0;
+          int targetNom = int.tryParse(_selectedEmis ?? '0') ?? 0;
+          bool isEmi = emiText.isNotEmpty;
+          
+          dynamic matchedChit;
+          bool isExactMatch = false;
+
+          for (var chit in chits) {
+            int chitValue = int.tryParse(chit['ch_value'].toString()) ?? 0;
+            int emiAmount = int.tryParse(chit['amount'].toString()) ?? 0;
+            int checkValue = isEmi ? emiAmount : chitValue;
+            int nom = int.tryParse(chit['nom'].toString()) ?? 0;
+
+            if (checkValue == targetAmount && nom == targetNom) {
+              matchedChit = chit;
+              isExactMatch = true;
+              break;
+            }
+          }
+
+          if (!isExactMatch && chits.isNotEmpty) {
+            chits.sort((a, b) {
+              int valA = int.tryParse(a[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              int valB = int.tryParse(b[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              if (valA != valB) return valA.compareTo(valB);
+              
+              int nomA = int.tryParse(a['nom'].toString()) ?? 0;
+              int nomB = int.tryParse(b['nom'].toString()) ?? 0;
+              return nomA.compareTo(nomB);
+            });
+
+            for (var chit in chits) {
+              int checkValue = int.tryParse(chit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              int nom = int.tryParse(chit['nom'].toString()) ?? 0;
+              if (checkValue >= targetAmount && nom >= targetNom) {
+                matchedChit = chit;
+                break;
+              }
+            }
+
+            if (matchedChit == null) {
+              for (var chit in chits) {
+                int checkValue = int.tryParse(chit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                if (checkValue >= targetAmount) {
+                  matchedChit = chit;
+                  break;
+                }
+              }
+            }
+
+            matchedChit ??= chits.last;
+            
+            if (mounted) {
+              int shownValue = int.tryParse(matchedChit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              int shownNom = int.tryParse(matchedChit['nom'].toString()) ?? 0;
+              
+              String msg = '';
+              if (shownValue != targetAmount && shownNom != targetNom) {
+                msg = 'We don\'t have a ₹$targetAmount plan for $targetNom months. Showing nearest plan: ₹$shownValue for $shownNom months.';
+              } else if (shownValue != targetAmount) {
+                msg = 'We don\'t have a ₹$targetAmount plan. Showing nearest plan: ₹$shownValue.';
+              } else if (shownNom != targetNom) {
+                msg = 'We don\'t have this plan for $targetNom months. Showing nearest plan for $shownNom months.';
+              }
+
+              if (msg.isNotEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(msg, style: GoogleFonts.inter(color: Colors.white)),
+                    backgroundColor: Colors.black,
+                    behavior: SnackBarBehavior.fixed,
+                  ),
+                );
+              }
+            }
+          }
+
+          if (mounted && matchedChit != null) {
+            int planId = matchedChit['id'];
+            String displayTopAmount = matchedChit[isEmi ? 'amount' : 'ch_value'].toString();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CalculatorSchemeScreen(
+                  planId: planId,
+                  displayTopAmount: displayTopAmount,
+                ),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching scheme: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching plans', style: GoogleFonts.inter(color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingPlan = false;
+        });
+      }
+    }
   }
-
-
 
   void _showNeedHelpBottomSheet(BuildContext context) {
     showModalBottomSheet(
@@ -79,12 +287,13 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag handle bar
-              Center(
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Drag handle bar
+                Center(
                 child: Container(
                   width: 38,
                   height: 4,
@@ -135,18 +344,62 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              // Card 1: General Enquiry
-              _buildHelpCard(
-                icon: Icons.call_outlined,
-                title: 'General Enquiry',
-                subtitle: 'Account, group & plan queries',
-                badgeText: '9 AM - 6 PM',
-                badgeBgColor: const Color(0xFFDCFCE7),
-                badgeTextColor: const Color(0xFF15803D),
-                phoneText: '+91 90 4783 4783',
-                onCallTap: () {},
-              ),
-            ],
+                // Card 1: General Enquiry
+                if (_generalPhone.isNotEmpty)
+                  _buildHelpCard(
+                    icon: Icons.call_outlined,
+                    title: 'General Enquiry',
+                    subtitle: 'Account, group & plan queries',
+                    badgeText: '9 AM - 6 PM',
+                    badgeBgColor: const Color(0xFFDCFCE7),
+                    badgeTextColor: const Color(0xFF15803D),
+                    phoneText: '+91 $_generalPhone',
+                    onCallTap: () async {
+                      final Uri url = Uri.parse('tel:$_generalPhone');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    },
+                  ),
+                if (_customerPhone.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildHelpCard(
+                    icon: Icons.support_agent_outlined,
+                    title: 'Customer Support',
+                    subtitle: 'Collection/Payment Support',
+                    badgeText: '9 AM - 6 PM',
+                    badgeBgColor: const Color(0xFFE0F2FE),
+                    badgeTextColor: const Color(0xFF0369A1),
+                    phoneText: '+91 $_customerPhone',
+                    onCallTap: () async {
+                      final Uri url = Uri.parse('tel:$_customerPhone');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    },
+                  ),
+                ],
+                if (_email.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _buildHelpCard(
+                    icon: Icons.mail_outline,
+                    title: 'Email',
+                    subtitle: 'Drop us a line',
+                    badgeText: '24/7',
+                    badgeBgColor: const Color(0xFFFEF3C7),
+                    badgeTextColor: const Color(0xFFB45309),
+                    phoneText: _email,
+                    buttonText: 'Email',
+                    onCallTap: () async {
+                      final Uri url = Uri.parse('mailto:$_email');
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url);
+                      }
+                    },
+                  ),
+                ],
+              ],
+            ),
           ),
         );
       },
@@ -162,8 +415,9 @@ class _HomeScreenState extends State<HomeScreen> {
     required Color badgeTextColor,
     required String phoneText,
     required VoidCallback onCallTap,
+    String buttonText = 'Call',
   }) {
-    const kBlue = Color(0xFF3C93F4);
+    const kBlue =  Color(0xff266FAF);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -257,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Call',
+                      buttonText,
                       style: GoogleFonts.inter(
                         color: Colors.white,
                         fontSize: 13,
@@ -418,7 +672,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 9.89 * scaleW,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF3C93F4),
+                          color:  Color(0xff266FAF),
                           letterSpacing: 0,
                           height: 1.0,
                         ),
@@ -429,7 +683,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 5.96 * scaleW,
                           fontWeight: FontWeight.w400,
-                          color: const Color(0xFF3C93F4),
+                          color:  Color(0xff266FAF),
                           letterSpacing: 0.2,
                           height: 1.0,
                         ),
@@ -629,7 +883,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 101 * scaleW,
               height: 28 * scaleW,
               decoration: BoxDecoration(
-                color: const Color(0xFF3C93F4),
+                color:  Color(0xff266FAF),
                 borderRadius: BorderRadius.circular(180),
               ),
               alignment: Alignment.center,
@@ -654,22 +908,15 @@ class _HomeScreenState extends State<HomeScreen> {
   // Text sizes, Button size (130x40), Input fields (290x40), Dropdowns (138x40)
   Widget _buildBlueCalculatorSection(double screenWidth, double scaleW, double scaleH) {
     final sectionWidth = screenWidth;
-    const primaryBlue = Color(0xFF3C93F4);
+    const primaryBlue =  Color(0xff266FAF);
 
     return SizedBox(
       width: sectionWidth,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Background blue torn paper asset (assets/images/blue_round.png)
           Positioned.fill(
-            child: Image.asset(
-              'assets/home/lets_growth_bg.png',
-              width: sectionWidth,
-             
-              errorBuilder: (context, error, stackTrace) =>
-                  Container(color: primaryBlue),
-            ),
+            child: Container(color: primaryBlue),
           ),
 
           // Content inside Blue Section
@@ -677,7 +924,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.only(
               left: 15 * scaleW.clamp(0.85, 1.2),
               right: 17 * scaleW.clamp(0.85, 1.2),
-              top: 54 * scaleH.clamp(0.85, 1.2), // Figma: top: 631px (577 + 54 = 631)
+              top: 30 * scaleH.clamp(0.85, 1.2),
               bottom: 36 * scaleH.clamp(0.85, 1.2),
             ),
             child: Column(
@@ -996,14 +1243,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     padding: EdgeInsets.zero,
                                   ),
-                                  child: Text(
-                                    'Submit',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 14 * scaleW.clamp(0.85, 1.2),
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
-                                    ),
-                                  ),
+                                  child: _isLoadingPlan
+                                      ? SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                        )
+                                      : Text(
+                                          'Submit',
+                                          style: GoogleFonts.inter(
+                                            fontSize: 14 * scaleW.clamp(0.85, 1.2),
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.white,
+                                          ),
+                                        ),
                                 ),
                               ),
                             ],
@@ -1257,12 +1510,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Book/Info Icon
                   Image.asset(
-                    'assets/images/about.png',
+                    'assets/setting/about_us.png',
                     width: 24 * scaleW,
                     height: 24 * scaleW,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.info_outline, color: Color(0xFF3C93F4)),
+                    const Icon(Icons.info_outline, color:  Color(0xff266FAF)),
                   ),
 
                   SizedBox(width: 12 * scaleW),
@@ -1350,12 +1603,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   // Message/Question Icon
                   Image.asset(
-                    'assets/images/message.png',
+                    'assets/setting/faq.png',
                     width: 24 * scaleW,
                     height: 24 * scaleW,
                     fit: BoxFit.contain,
                     errorBuilder: (context, error, stackTrace) =>
-                    const Icon(Icons.help_outline, color: Color(0xFF3C93F4)),
+                    const Icon(Icons.help_outline, color:  Color(0xff266FAF)),
                   ),
 
                   SizedBox(width: 12 * scaleW),
@@ -1413,11 +1666,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- 9. Bottom Navigation Bar ---
-  // Specs: width: 38, height: 42, top: 7px, left: 42px (applied to all 3 icons/tabs)
-  // Stiff at the bottom, incorporates MediaQuery.padding.bottom for gesture/navigation bar
   Widget _buildBottomNavigationBar(double scaleW, double bottomPadding) {
-    const activeColor = Color(0xFF3C93F4);
+    const activeColor =  Color(0xff266FAF);
     const inactiveColor = Color(0xFF818181);
 
     return Container(
@@ -1451,7 +1701,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // 1. Home (Active: width: 38, height: 42, top: 7px, left: 42px)
           _buildBottomNavItem(
             index: 0,
-            iconAsset: 'assets/images/home.png',
+            activeIconAsset: 'assets/new_home/new_home_active.png',
+            inactiveIconAsset: 'assets/new_home/new_home_inactive.png',
             fallbackIcon: Icons.home,
             label: 'Home',
             isActive: _selectedBottomNavIndex == 0,
@@ -1466,7 +1717,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // 2. Calculator (Inactive: height: 42, top: 7px)
           _buildBottomNavItem(
             index: 1,
-            iconAsset: 'assets/images/calculator.png',
+            activeIconAsset: 'assets/new_home/new_cal_active.png',
+            inactiveIconAsset: 'assets/new_home/new_cal_inactive.png',
             fallbackIcon: Icons.calculate_outlined,
             label: 'Calculator',
             isActive: _selectedBottomNavIndex == 1,
@@ -1478,7 +1730,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CalculatorScreen_new(),
+                  builder: (context) => const CalculatorScreen(),
                 ),
               ).then((_) {
                 setState(() => _selectedBottomNavIndex = 0);
@@ -1489,7 +1741,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // 3. Help (Inactive: width: 38, height: 42, top: 7px)
           _buildBottomNavItem(
             index: 2,
-            iconAsset: 'assets/images/help.png',
+            activeIconAsset: 'assets/new_home/new_help_active.png',
+            inactiveIconAsset: 'assets/new_home/new_help_inactive.png',
             fallbackIcon: Icons.headset_mic_outlined,
             label: 'Help',
             isActive: _selectedBottomNavIndex == 2,
@@ -1498,7 +1751,14 @@ class _HomeScreenState extends State<HomeScreen> {
             scaleW: scaleW,
             onTap: () {
               setState(() => _selectedBottomNavIndex = 2);
-              _showNeedHelpBottomSheet(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
+              ).then((_) {
+                if (mounted) {
+                  setState(() => _selectedBottomNavIndex = 0);
+                }
+              });
             },
           ),
         ],
@@ -1508,7 +1768,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBottomNavItem({
     required int index,
-    required String iconAsset,
+    required String activeIconAsset,
+    required String inactiveIconAsset,
     required IconData fallbackIcon,
     required String label,
     required bool isActive,
@@ -1531,11 +1792,10 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Image.asset(
-              iconAsset,
+              isActive ? activeIconAsset : inactiveIconAsset,
               width: 24 * scaleW,
               height: 24 * scaleW,
               fit: BoxFit.contain,
-              color: isActive ? null : inactiveColor,
               errorBuilder: (context, error, stackTrace) =>
                   Icon(fallbackIcon, size: 24 * scaleW, color: color),
             ),
@@ -1551,6 +1811,7 @@ class _HomeScreenState extends State<HomeScreen> {
               maxLines: 1,
               overflow: TextOverflow.visible,
             ),
+            SizedBox(height: 1), // Optional, just to prevent text cropping sometimes
           ],
         ),
       ),

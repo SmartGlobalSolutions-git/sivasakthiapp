@@ -35,8 +35,8 @@ class ChitPassbookScreen extends StatefulWidget {
 
 class _ChitPassbookScreenState extends State<ChitPassbookScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
-  static const Color kGold = Color(0xFF3C93F4);
-  static const Color kHeaderBlue = Color(0xFF3C93F4);
+  static const Color kGold = Color(0xff266FAF);
+  static const Color kHeaderBlue = Color(0xff266FAF);
   static const Color kHeaderDivider = Colors.white24;
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);

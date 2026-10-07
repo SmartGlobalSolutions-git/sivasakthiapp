@@ -8,7 +8,7 @@ import 'contact_support.dart';
 
 // ---- Figma tokens (FAQ) ----
 class _Colors {
-  static const Color primaryBlue = Color(0xFF3C93F4);
+  static const Color primaryBlue = Color(0xff266FAF);
   static const Color border = Color(0xFFF3F4F6);
   static const Color textDark = Color(0xFF111827);
   static const Color textBody = Color(0xFF000000);

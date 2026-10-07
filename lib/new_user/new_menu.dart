@@ -3,8 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/new_user/new_calculator.dart';
 import 'package:siva_sakthi/chat_bot/chat.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
-import 'package:siva_sakthi/setting/profile_info.dart';
-import 'package:siva_sakthi/setting/setting.dart';
+import 'package:siva_sakthi/new_user/new_settings.dart';
+import 'package:siva_sakthi/setting/reward.dart';
 
 class NewUserMenuScreen extends StatelessWidget {
   const NewUserMenuScreen({super.key});
@@ -117,11 +117,11 @@ class NewUserMenuScreen extends StatelessWidget {
                             width: 14 * scaleW,
                             height: 14 * scaleW,
                             fit: BoxFit.contain,
-                            color: const Color(0xFF3C93F4),
+                            color: Color(0xff266FAF),
                             errorBuilder: (context, error, stackTrace) => const Icon(
                               Icons.headset_mic,
                               size: 14,
-                              color: Color(0xFF3C93F4),
+                              color:  Color(0xff266FAF),
                             ),
                           ),
                           SizedBox(width: 4 * scaleW),
@@ -130,7 +130,7 @@ class NewUserMenuScreen extends StatelessWidget {
                             style: GoogleFonts.inter(
                               fontSize: (11 * scaleW).clamp(9.5, 13.0),
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF3C93F4),
+                              color:  Color(0xff266FAF),
                             ),
                           ),
                         ],
@@ -147,7 +147,7 @@ class NewUserMenuScreen extends StatelessWidget {
             Center(
               child: Container(
                 width: 275 * scaleW,
-                height: 162 * scaleW,
+                height: 101 * scaleW,
                 padding: EdgeInsets.symmetric(
                   horizontal: 16 * scaleW,
                   vertical: 16 * scaleW,
@@ -159,20 +159,6 @@ class NewUserMenuScreen extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildCardMenuItem(
-                      context,
-                      iconAsset: 'assets/images/profile_menu.png',
-                      fallbackIcon: Icons.person_outline,
-                      label: 'Profile',
-                      scaleW: scaleW,
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const ProfileScreen()),
-                        );
-                      },
-                    ),
                     _buildCardMenuItem(
                       context,
                       iconAsset: 'assets/images/calc_menu.png',
@@ -234,7 +220,7 @@ class NewUserMenuScreen extends StatelessWidget {
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => const SettingScreen()),
+                          MaterialPageRoute(builder: (context) => const NewSettingsScreen()),
                         );
                       },
                     ),
@@ -244,7 +230,13 @@ class NewUserMenuScreen extends StatelessWidget {
                       fallbackIcon: Icons.emoji_events_outlined,
                       label: 'Rewards & Achievements',
                       scaleW: scaleW,
-                      onTap: () => Navigator.pop(context),
+                      onTap: () {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const RewardsAchievementsScreen()),
+                        );
+                      },
                     ),
                   ],
                 ),

@@ -93,11 +93,51 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
   String _generalPhone = '';
   String _customerPhone = '';
   String _email = '';
+  String _dynamicUserName = '';
 
   @override
   void initState() {
     super.initState();
+    _dynamicUserName = widget.userName;
+    _fetchProfileName();
     _fetchHelpContent();
+  }
+
+  Future<void> _fetchProfileName() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String savedCusId = prefs.getString('cus_id') ?? '1';
+      final String deviceId = await DeviceLocationService.getDeviceId();
+      final Map<String, String> loc = await DeviceLocationService.getLocation();
+      
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6010',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'cus_id': savedCusId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['error'] == false) {
+          if (mounted) {
+            setState(() {
+              final String fetchedName = data['name']?.toString().trim() ?? '';
+              if (fetchedName.isNotEmpty) {
+                 _dynamicUserName = fetchedName;
+              }
+            });
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching profile name: $e');
+    }
   }
 
   Future<void> _fetchHelpContent() async {
@@ -183,19 +223,15 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Hi ${widget.userName},\nHow can we help ?', style: _TextStyles.greeting),
+                  Text('Hello,\nHow can we help?', style: _TextStyles.greeting),
                   const SizedBox(height: 12),
                   const Text(
-                    'Search a topic or find your query in the FAQs',
+                    'find your query in the FQAs',
                     style: _TextStyles.subtitle,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 18),
-            _SearchBox(onSubmitted: (query) {
-              // TODO: search FAQs with [query]
-            }),
             const SizedBox(height: 16),
             Center(
               child: _ChatButton(onTap: () {
@@ -268,51 +304,6 @@ class _NeedHelpScreenState extends State<NeedHelpScreen> {
   }
 }
 
-// 328 x 51, radius 12, 1px border (#000000 @ 41%), padding L16 R17
-class _SearchBox extends StatelessWidget {
-  const _SearchBox({required this.onSubmitted});
-  final ValueChanged<String> onSubmitted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 51,
-      width: double.infinity,
-      padding: const EdgeInsets.only(left: 27, right: 28),
-      decoration: BoxDecoration(
-        color: _Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _Colors.searchBorder, width: 1),
-        boxShadow: const [
-          BoxShadow(color: _Colors.shadow, offset: Offset(0, 2), blurRadius: 4),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              onSubmitted: onSubmitted,
-              textInputAction: TextInputAction.search,
-              style: _TextStyles.searchText,
-              decoration: const InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: 'How can we help you ?',
-                hintStyle: TextStyle(
-                  fontFamily: 'Poppins',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: _Colors.hint,
-                ),
-              ),
-            ),
-          ),
-          const Icon(Icons.search, size: 20, color: _Colors.black80),
-        ],
-      ),
-    );
-  }
-}
 
 // 130 x 40, radius 24, #058334, padding T8 R6 B8 L12, gap 10
 class _ChatButton extends StatelessWidget {

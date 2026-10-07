@@ -41,8 +41,8 @@ class ChitStatementScreen extends StatefulWidget {
 
 class _ChitStatementScreenState extends State<ChitStatementScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
-  static const Color kGold = Color(0xFF3C93F4);
-  static const Color kHeaderBlue = Color(0xFF3C93F4);
+  static const Color kGold = Color(0xff266FAF);
+  static const Color kHeaderBlue = Color(0xff266FAF);
   static const Color kHeaderDivider = Colors.white24;
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);
@@ -254,7 +254,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                   height: 14,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.headset_mic, size: 14, color: Color(0xFF3C93F4)),
+                      const Icon(Icons.headset_mic, size: 14, color: Color(0xff266FAF)),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -262,7 +262,7 @@ class _ChitStatementScreenState extends State<ChitStatementScreen> {
                   style: GoogleFonts.manrope(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3C93F4),
+                    color:Color(0xff266FAF),
                   ),
                 ),
               ],

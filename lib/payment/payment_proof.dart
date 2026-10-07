@@ -22,7 +22,7 @@ class PaymentProofScreen extends StatefulWidget {
 }
 
 class _PaymentProofScreenState extends State<PaymentProofScreen> {
-  static const _blue = Color(0xFF3C93F4);
+  static const _blue = Color(0xff266FAF);
   static const _bg = Color(0xFFF4F4F4);
   static const _border = Color(0xFFD4D4D4);
   static const _fieldBorder = Color(0xFFE2E8F0);

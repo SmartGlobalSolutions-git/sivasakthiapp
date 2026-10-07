@@ -18,7 +18,7 @@ class PaymentMethodsScreen extends StatefulWidget {
 }
 
 class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
-  static const _blue = Color(0xFF3C93F4);
+  static const _blue = Color(0xff266FAF);
   static const _bg = Color(0xFFF4F4F4);
   static const _green = Color(0xFF047857);
   static const _slate = Color(0xFF64748B);

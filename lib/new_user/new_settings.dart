@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:siva_sakthi/setting/about_us.dart';
 import 'package:siva_sakthi/setting/faq_screen.dart';
 import 'package:siva_sakthi/setting/privacy_policy.dart';
-import 'package:siva_sakthi/setting/profile_info.dart';
 import 'package:siva_sakthi/setting/terms_condition.dart';
 import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,14 +11,14 @@ import 'package:siva_sakthi/OnBoarding_Screen/login_screen.dart';
 // SETTING SCREEN
 // ==========================================================
 
-class SettingScreen extends StatefulWidget {
-  const SettingScreen({super.key});
+class NewSettingsScreen extends StatefulWidget {
+  const  NewSettingsScreen({super.key});
 
   @override
-  State<SettingScreen> createState() => _SettingScreenState();
+  State< NewSettingsScreen> createState() => _NewSettingsScreenState();
 }
 
-class _SettingScreenState extends State<SettingScreen> {
+class _NewSettingsScreenState extends State< NewSettingsScreen> {
   String _selectedLanguage = 'English';
 
   static const Color kTitle = Color(0xFF000000);
@@ -179,11 +178,11 @@ class _SettingScreenState extends State<SettingScreen> {
                       onTap: () async {
                         final prefs = await SharedPreferences.getInstance();
                         await prefs.clear();
-                        
+
                         if (!context.mounted) return;
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          (route) => false,
+                              (route) => false,
                         );
                       },
                       child: Container(
@@ -191,7 +190,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xff266FAF),
                           borderRadius: BorderRadius.circular(12),
-                        
+
                         ),
                         alignment: Alignment.center,
                         child: const Text(
@@ -248,21 +247,6 @@ class _SettingScreenState extends State<SettingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _sectionLabel(w, h, 'ACCOUNT'),
-            _sectionCard(w, h, [
-              _settingRow(
-                w,
-                h,
-                iconAsset: 'assets/setting/profile.png',
-                fallback: Icons.person_outline,
-                title: 'Profile Information',
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ProfileScreen()),
-                  ),
-              ),
-            ]),
-            SizedBox(height: h(18)),
-
             _sectionLabel(w, h, 'APP PREFERENCES'),
             _sectionCard(w, h, [
               _settingRow(

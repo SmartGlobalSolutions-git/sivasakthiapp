@@ -281,7 +281,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         width: 18,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3C93F4),
+                          color: const Color(0xff266FAF),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -437,7 +437,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                               color: _phoneError != null
                                                   ? const Color(0xFFD92D20)
                                                   : (_phoneFocusNode.hasFocus
-                                                        ? const Color(0xFF3C93F4)
+                                                        ? Color(0xff266FAF)
                                                         : const Color(0xFFD2D2D2)),
                                               width: 1.0,
                                             ),
@@ -505,9 +505,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     child: ElevatedButton(
                                       onPressed: _isLoading ? null : _onGetOtp,
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFF3C93F4,
-                                        ),
+                                        backgroundColor: Color(0xff266FAF),
                                         foregroundColor: Colors.white,
                                         elevation: 0,
                                         shape: RoundedRectangleBorder(

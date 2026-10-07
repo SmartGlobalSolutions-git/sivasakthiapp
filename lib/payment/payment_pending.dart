@@ -74,7 +74,7 @@ class _ReceiptPendingScreenState extends State<ReceiptPendingScreen> {
                         child: Icon(
                           Icons.receipt_long,
                           size: 80 * scaleW,
-                          color: const Color(0xFF3C93F4),
+                          color: const Color(0xff266FAF),
                         ),
                       ),
                     ),

@@ -1,6 +1,9 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/device_location_service.dart';
 import 'calculator_scheme.dart';
 
 class CalculatorScreen extends StatefulWidget {
@@ -19,6 +22,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   final List<String> _emiOptions = ['10', '12', '15', '20', '25', '30', '40', '50'];
   final List<String> _chitMemberOptions = ['10', '12', '15', '20', '25', '30', '40', '50'];
+  
+  bool _isLoadingPlan = false;
 
   @override
   void dispose() {
@@ -27,7 +32,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     super.dispose();
   }
 
-  void _navigateToSubscriptionPlan() {
+  Future<void> _navigateToSubscriptionPlan() async {
     final investmentText = _investmentController.text.trim();
     final emiText = _emiController.text.trim();
 
@@ -65,17 +70,140 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     }
 
     final amountToPass = investmentText.isNotEmpty ? investmentText : emiText;
+    
+    setState(() {
+      _isLoadingPlan = true;
+    });
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => CalculatorSchemeScreen(
-          investmentAmount: amountToPass,
-          durationMonths: _selectedNoOfEmis!,
-          isEmi: emiText.isNotEmpty,
-        ),
-      ),
-    );
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6003',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['chit'] != null) {
+          List<dynamic> chits = data['chit'];
+          
+          int targetAmount = int.tryParse(amountToPass.replaceAll(',', '').replaceAll(' ', '')) ?? 0;
+          int targetNom = int.tryParse(_selectedNoOfEmis ?? '0') ?? 0;
+          bool isEmi = emiText.isNotEmpty;
+          
+          dynamic matchedChit;
+          bool isExactMatch = false;
+
+          for (var chit in chits) {
+            int chitValue = int.tryParse(chit['ch_value'].toString()) ?? 0;
+            int emiAmount = int.tryParse(chit['amount'].toString()) ?? 0;
+            int checkValue = isEmi ? emiAmount : chitValue;
+            int nom = int.tryParse(chit['nom'].toString()) ?? 0;
+
+            if (checkValue == targetAmount && nom == targetNom) {
+              matchedChit = chit;
+              isExactMatch = true;
+              break;
+            }
+          }
+
+          if (!isExactMatch && chits.isNotEmpty) {
+            chits.sort((a, b) {
+              int valA = int.tryParse(a[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              int valB = int.tryParse(b[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              if (valA != valB) return valA.compareTo(valB);
+              
+              int nomA = int.tryParse(a['nom'].toString()) ?? 0;
+              int nomB = int.tryParse(b['nom'].toString()) ?? 0;
+              return nomA.compareTo(nomB);
+            });
+
+            for (var chit in chits) {
+              int checkValue = int.tryParse(chit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              int nom = int.tryParse(chit['nom'].toString()) ?? 0;
+              if (checkValue >= targetAmount && nom >= targetNom) {
+                matchedChit = chit;
+                break;
+              }
+            }
+
+            if (matchedChit == null) {
+              for (var chit in chits) {
+                int checkValue = int.tryParse(chit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                if (checkValue >= targetAmount) {
+                  matchedChit = chit;
+                  break;
+                }
+              }
+            }
+
+            matchedChit ??= chits.last;
+            
+            if (mounted) {
+              int shownValue = int.tryParse(matchedChit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+              int shownNom = int.tryParse(matchedChit['nom'].toString()) ?? 0;
+              
+              String msg = '';
+              if (shownValue != targetAmount && shownNom != targetNom) {
+                msg = 'We don\'t have a ₹$targetAmount plan for $targetNom months. Showing nearest plan: ₹$shownValue for $shownNom months.';
+              } else if (shownValue != targetAmount) {
+                msg = 'We don\'t have a ₹$targetAmount plan. Showing nearest plan: ₹$shownValue.';
+              } else if (shownNom != targetNom) {
+                msg = 'We don\'t have this plan for $targetNom months. Showing nearest plan for $shownNom months.';
+              }
+
+              if (msg.isNotEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(msg, style: GoogleFonts.inter(color: Colors.white)),
+                    backgroundColor: Colors.black,
+                    behavior: SnackBarBehavior.fixed,
+                  ),
+                );
+              }
+            }
+          }
+
+          if (mounted && matchedChit != null) {
+            int planId = matchedChit['id'];
+            String displayTopAmount = matchedChit[isEmi ? 'amount' : 'ch_value'].toString();
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CalculatorSchemeScreen(
+                  planId: planId,
+                  displayTopAmount: displayTopAmount,
+                ),
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error fetching scheme: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching plans', style: GoogleFonts.inter(color: Colors.white)),
+            backgroundColor: Colors.black,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingPlan = false;
+        });
+      }
+    }
   }
 
   @override
@@ -86,7 +214,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     final double screenHeight = screenSize.height;
     final double scaleW = (screenWidth / 360.0).clamp(0.85, 1.25);
     final double scaleH = (screenHeight / 800.0).clamp(0.85, 1.25);
-    const primaryBlue = Color(0xFF3C93F4);
+    const primaryBlue =  Color(0xff266FAF);
 
     final double topPadding = mediaQuery.padding.top;
     final double bottomPadding = mediaQuery.padding.bottom;
@@ -152,50 +280,21 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Blue Section (with exact torn bottom edge from assets/images/bgblue.png)
+            // Blue Section
             Stack(
               clipBehavior: Clip.none,
               children: [
-                // Solid blue underlay to guarantee solid coverage
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 480 * scaleH,
+                Positioned.fill(
                   child: Container(color: primaryBlue),
                 ),
 
-                // Blue Torn Paper Background Asset (Width: 392, Left: -19 in Figma)
-                Positioned(
-                  left: -19 * scaleW,
-                  top: -24 * scaleH,
-                  width: 398 * scaleW,
-                  bottom: 0,
-                  child: Image.asset(
-                    'assets/calculator/bgblue.png',
-                    fit: BoxFit.fill,
-                    alignment: Alignment.topCenter,
-                    errorBuilder: (context, error, stackTrace) =>
-                        Container(color: primaryBlue),
-                  ),
-                ),
-
-                // Blue Header Cap to ensure seamless edge with white bar
-                Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 10 * scaleH,
-                  child: Container(color: primaryBlue),
-                ),
-
-                // Content inside the Blue Section (Figma gap to radio button: 38px)
+                // Content inside the Blue Section
                 Padding(
                   padding: EdgeInsets.only(
                     left: 16 * scaleW.clamp(0.85, 1.2),
                     right: 16 * scaleW.clamp(0.85, 1.2),
                     top: 18 * scaleH.clamp(0.85, 1.2),
-                    bottom: 60 * scaleH.clamp(0.85, 1.2), // Room for torn bottom edge
+                    bottom: 36 * scaleH.clamp(0.85, 1.2),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,14 +586,20 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                                             ),
                                             padding: EdgeInsets.zero,
                                           ),
-                                          child: Text(
-                                            'Submit',
-                                            style: GoogleFonts.inter(
-                                              fontSize: 14 * scaleW.clamp(0.85, 1.2),
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
-                                          ),
+                                          child: _isLoadingPlan
+                                              ? SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                                )
+                                              : Text(
+                                                  'Submit',
+                                                  style: GoogleFonts.inter(
+                                                    fontSize: 14 * scaleW.clamp(0.85, 1.2),
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
                                         ),
                                       ),
                                     ],

@@ -70,7 +70,7 @@ class GetStartedScreen extends StatelessWidget {
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      Color(0xFF3C93F4),
+                                      Color(0xff266FAF),
                                       Color(0xFF1B65B7),
                                     ],
                                   ),
@@ -105,7 +105,7 @@ class GetStartedScreen extends StatelessWidget {
                                   style: GoogleFonts.inter(
                                     fontSize: 22,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF3C93F4),
+                                    color: const Color(0xff266FAF),
                                     height: 1.15,
                                   ),
                                 ),
@@ -158,7 +158,7 @@ class GetStartedScreen extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
-                                color: const Color(0xFF3C93F4),
+                                color: const Color(0xff266FAF),
                                 height: 1.15,
                               ),
                             ),
@@ -248,7 +248,7 @@ class GetStartedScreen extends StatelessWidget {
                                   );
                                 },
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF3C93F4),
+                                  backgroundColor: const Color(0xff266FAF),
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(
@@ -291,9 +291,9 @@ class GetStartedScreen extends StatelessWidget {
                                   style: GoogleFonts.inter(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w500,
-                                    color: const Color(0xFF3C93F4),
+                                    color: const Color(0xff266FAF),
                                     decoration: TextDecoration.underline,
-                                    decorationColor: const Color(0xFF3C93F4),
+                                    decorationColor: const Color(0xff266FAF),
                                     height: 1.3,
                                   ),
                                 ),

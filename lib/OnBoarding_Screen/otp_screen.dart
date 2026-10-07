@@ -9,9 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/device_location_service.dart';
 import 'terms_condition_screen.dart';
 
-/// OTP Verification Screen: Figma Android Medium - 14
-/// 6-digit OTP entry with countdown timer
-/// Screen 4: Android Medium - 14 (Enter your OTP)
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
   final String token;
@@ -243,7 +240,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         width: 18,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF3C93F4),
+                          color: Color(0xff266FAF),
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -348,7 +345,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFEDEDED),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: const Color(0xFF3C93F4), width: 1.5),
+                                  border: Border.all(color: Color(0xff266FAF), width: 1.5),
                                 ),
                               ),
                             ),
@@ -372,7 +369,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                         style: GoogleFonts.inter(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF3C93F4),
+                                          color: Color(0xff266FAF),
                                         ),
                                       ),
                                     ],
@@ -386,8 +383,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
                                       color: _remainingSeconds == 0
-                                          ? const Color(0xFF3C93F4)
-                                          : const Color(0xFF3C93F4).withValues(alpha: 0.5),
+                                          ? Color(0xff266FAF)
+                                          : Color(0xff266FAF).withValues(alpha: 0.5),
                                     ),
                                   ),
                                 ),
@@ -403,7 +400,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _onVerify,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF3C93F4),
+                                  backgroundColor: Color(0xff266FAF),
                                   foregroundColor: Colors.white,
                                   elevation: 0,
                                   shape: RoundedRectangleBorder(

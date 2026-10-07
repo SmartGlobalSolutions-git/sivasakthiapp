@@ -162,7 +162,7 @@ class _ChitSchemScreenState extends State<ChitSchemScreen> {
                             height: 14 * scaleH.clamp(0.85, 1.2),
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.headset_mic, size: 14, color: Color(0xFF3C93F4)),
+                                const Icon(Icons.headset_mic, size: 14, color: Color(0xff266FAF)),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -170,7 +170,7 @@ class _ChitSchemScreenState extends State<ChitSchemScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 11 * scaleW.clamp(0.85, 1.1),
                               fontWeight: FontWeight.w500,
-                              color: const Color(0xFF3C93F4),
+                              color: Color(0xff266FAF),
                             ),
                           ),
                         ],
@@ -219,7 +219,7 @@ class _ChitSchemScreenState extends State<ChitSchemScreen> {
                         color: Color(0xFFE2EFFF),
                         border: Border(
                           bottom: BorderSide(
-                            color: Color(0xFF3C93F4),
+                            color: Color(0xff266FAF),
                             width: 3.0,
                           ),
                         ),
@@ -232,7 +232,7 @@ class _ChitSchemScreenState extends State<ChitSchemScreen> {
                           fontWeight: FontWeight.w400,
                           height: 1.0,
                           letterSpacing: 0,
-                          color: const Color(0xFF3C93F4),
+                          color: Color(0xff266FAF),
                         ),
                       ),
                     ),
@@ -373,7 +373,7 @@ class _ChitSchemScreenState extends State<ChitSchemScreen> {
                                           fontWeight: FontWeight.w400,
                                           height: 1.0,
                                           letterSpacing: 0,
-                                          color: const Color(0xFF3C93F4),
+                                          color: Color(0xff266FAF),
                                         ),
                                       ),
                                     ),

@@ -7,11 +7,11 @@ import '../services/device_location_service.dart';
 
 // ---- Figma tokens (Profile) ----
 class _Colors {
-  static const Color primaryBlue = Color(0xFF3C93F4); // app bar + header curve
+  static const Color primaryBlue = Color(0xff266FAF); // app bar + header curve
   static const Color iconBg = Color(0x1A3C93F4); // #3C93F4 @ 10%
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color name = Color(0xFF0E2E97);
+  static const Color name = Color(0xff266FAF);
   static const Color rowLabel = Color(0xFF111827);
   static const Color rowValue = Color(0xFF6B7280);
   static const Color border = Color(0xFFF3F4F6); // card border + dividers

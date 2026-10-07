@@ -147,7 +147,7 @@ class LiveAuctionRoomScreen extends StatelessWidget {
                                 height: 24,
                                 fit: BoxFit.contain,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.people, size: 24, color: Colors.blue),
+                                    const Icon(Icons.people, size: 24, color: Color(0xff266FAF)),
                               ),
                               const SizedBox(width: 8),
                               const Text(
@@ -175,7 +175,7 @@ class LiveAuctionRoomScreen extends StatelessWidget {
                                   fallbackColor: Colors.green,
                                   label: 'Active',
                                   value: '1',
-                                  valueColor: const Color(0xFF2563EB),
+                                  valueColor:Color(0xff266FAF),
                                 ),
                               ),
 
@@ -215,7 +215,7 @@ class LiveAuctionRoomScreen extends StatelessWidget {
                                   fallbackColor: Colors.orange,
                                   label: 'Participated\nMembers',
                                   value: '4',
-                                  valueColor: const Color(0xFF2563EB),
+                                  valueColor: Color(0xff266FAF),
                                 ),
                               ),
                             ],
@@ -295,7 +295,7 @@ class LiveAuctionRoomScreen extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2F80ED),
+                    backgroundColor:Color(0xff266FAF),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(

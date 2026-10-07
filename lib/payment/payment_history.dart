@@ -1,3 +1,7 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:siva_sakthi/services/device_location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/payment/payment.dart';
@@ -41,68 +45,87 @@ class PaymentHistoryScreen extends StatefulWidget {
 class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
   static const Color kBg = Color(0xFFF7F8FC);
   static const Color kTabActiveBg = Color(0xFFE0EEFF);
-  static const Color kBlue = Color(0xFF3C93F4);
+  static const Color kBlue = Color(0xff266FAF);
   static const Color kText = Color(0xFF1B1C1C);
   static const Color kAmount = Color(0xFF4659A5);
   static const Color kMuted = Color(0xFF4F4633);
   static const String kWalletAsset = 'assets/payment/ic_wallet.png';
 
-  // TODO: replace with API data
-  static const List<_HistorySection> _sections = [
-    _HistorySection(items: [
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 Aug 2026, 11:45 AM',
-        amount: 412500,
-        status: PaymentStatus.pending,
-      ),
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 Jul 2026, 10:45 AM',
-        amount: 412500,
-        status: PaymentStatus.pending,
-      ),
-    ]),
-    _HistorySection(title: 'July 2026', items: [
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 Jun 2026, 9:45 AM',
-        amount: 412500,
-        status: PaymentStatus.approved,
-      ),
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 May 2026, 10:45 AM',
-        amount: 412500,
-        status: PaymentStatus.approved,
-      ),
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 Aug 2026, 11:45 AM',
-        amount: 412500,
-        status: PaymentStatus.approved,
-      ),
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 Aug 2026, 11:45 AM',
-        amount: 412500,
-        status: PaymentStatus.approved,
-      ),
-      PaymentHistoryItem(
-        chitNo: 'Chit / 1123',
-        groupName: 'Group Name / L-10',
-        dateTime: '24 Aug 2026, 11:45 AM',
-        amount: 412500,
-        status: PaymentStatus.approved,
-      ),
-    ]),
-  ];
+  List<_HistorySection> _sections = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPaymentHistory();
+  }
+
+  Future<void> _fetchPaymentHistory() async {
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+      final prefs = await SharedPreferences.getInstance();
+      
+      final cusId = prefs.getString('cus_id') ?? '';
+      
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6016',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'cus_id': cusId,
+        },
+      );
+
+      debugPrint('--- Payment History API Response ---');
+      debugPrint(response.body);
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        String gname = '';
+        String subName = '';
+        
+        if (data['subscriber_details'] != null && data['subscriber_details'] is List && data['subscriber_details'].isNotEmpty) {
+          final subDetails = data['subscriber_details'][0];
+          gname = subDetails['gname']?.toString() ?? '';
+          subName = subDetails['sub_name']?.toString() ?? '';
+        }
+
+        List<PaymentHistoryItem> items = [];
+        
+        if (data['receipts'] != null && data['receipts'] is List) {
+          for (var r in data['receipts']) {
+            int amount = int.tryParse(r['amount']?.toString() ?? '0') ?? 0;
+            String date = r['date']?.toString() ?? '';
+            
+            items.add(PaymentHistoryItem(
+              chitNo: subName.isNotEmpty ? subName : 'Chit',
+              groupName: gname.isNotEmpty ? gname : 'Group',
+              dateTime: date,
+              amount: amount,
+              status: PaymentStatus.approved,
+            ));
+          }
+        }
+        
+        if (mounted) {
+          setState(() {
+            _sections = items.isNotEmpty ? [_HistorySection(items: items)] : [];
+            _isLoading = false;
+          });
+        }
+      } else {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      debugPrint('Error fetching payment history: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   void _onTabTap(int index) {
     if (index == 0) {
@@ -191,7 +214,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.headset_mic,
                     size: 14,
-                    color: Color(0xFF3C93F4),
+                    color:Color(0xff266FAF),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -200,7 +223,7 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3C93F4),
+                    color: Color(0xff266FAF),
                   ),
                 ),
               ],
@@ -240,10 +263,19 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
         children: [
           _buildTabBar(),
           Expanded(
-            child: ListView(
-              padding: const EdgeInsets.only(top: 14, bottom: 16),
-              children: _buildRows(),
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _sections.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No payment history found',
+                          style: GoogleFonts.inter(fontSize: 14, color: kMuted),
+                        ),
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.only(top: 14, bottom: 16),
+                        children: _buildRows(),
+                      ),
           ),
         ],
       ),

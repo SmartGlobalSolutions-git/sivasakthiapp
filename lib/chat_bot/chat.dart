@@ -13,7 +13,7 @@ class ChatbotScreen extends StatefulWidget {
 class _ChatbotScreenState extends State<ChatbotScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  static const primaryBlue = Color(0xFF3C93F4);
+  static const primaryBlue =  Color(0xff266FAF);
 
   final List<Map<String, dynamic>> _messages = [
     {
@@ -777,10 +777,10 @@ class _CustomBotIconState extends State<CustomBotIcon>
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.white,
-            border: Border.all(color: const Color(0xFF3C93F4), width: 2),
+            border: Border.all(color: Color(0xff266FAF), width: 2),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF3C93F4).withValues(alpha: 0.3),
+                color:  Color(0xff266FAF).withValues(alpha: 0.3),
                 blurRadius: 10,
                 offset: const Offset(0, 3),
               ),

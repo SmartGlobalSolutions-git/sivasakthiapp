@@ -23,8 +23,8 @@ class _PassbookSearchScreenState extends State<PassbookSearchScreen> {
   String? _chitErrorMsg;
 
   static const Color kBg = Color(0xFFF3F3F5);
-  static const Color kGold = Color(0xFF3C93F4);
-  static const Color kGreen = Color(0xFF3C93F4);
+  static const Color kGold =  Color(0xff266FAF);
+  static const Color kGreen = Color(0xff266FAF);
   static const Color kLabelGrey = Color(0xFF4B5563);
   static const Color kPlaceholderGrey = Color(0xFF9CA3AF);
   static const Color kValueGrey = Color(0xFF374151);
@@ -507,7 +507,7 @@ class _FloatingRobotButtonState extends State<_FloatingRobotButton>
           errorBuilder: (_, _, _) => const Icon(
             Icons.smart_toy,
             size: 40,
-            color: Color(0xFF3C93F4),
+            color:  Color(0xff266FAF),
           ),
         ),
       ),

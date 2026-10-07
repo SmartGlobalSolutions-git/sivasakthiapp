@@ -213,7 +213,7 @@ class _AuctionResultScreenState extends State<AuctionResultScreen> {
                             fallbackColor: Colors.green,
                             label: 'Active',
                             value: '1',
-                            valueColor: const Color(0xFF2563EB),
+                            valueColor: Color(0xff266FAF),
                           ),
                         ),
 
@@ -233,7 +233,7 @@ class _AuctionResultScreenState extends State<AuctionResultScreen> {
                             fallbackColor: Colors.redAccent,
                             label: 'Total Bids',
                             value: '5',
-                            valueColor: const Color(0xFF6366F1),
+                            valueColor: Color(0xff266FAF),
                           ),
                         ),
 
@@ -253,7 +253,7 @@ class _AuctionResultScreenState extends State<AuctionResultScreen> {
                             fallbackColor: Colors.orange,
                             label: 'Participated\nMembers',
                             value: '4',
-                            valueColor: const Color(0xFF2563EB),
+                            valueColor: Color(0xff266FAF),
                           ),
                         ),
                       ],
@@ -302,7 +302,7 @@ class _AuctionResultScreenState extends State<AuctionResultScreen> {
                           height: 15,
                           fit: BoxFit.contain,
                           errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.swap_vert, size: 15, color: Color(0xFF2563EB)),
+                              const Icon(Icons.swap_vert, size: 15, color: Color(0xff266FAF)),
                         ),
                         const SizedBox(width: 6),
                         Text(

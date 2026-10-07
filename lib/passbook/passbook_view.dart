@@ -4,6 +4,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:siva_sakthi/services/device_location_service.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:share_plus/share_plus.dart';
 
 class PassbookEntry {
   final String slNo;
@@ -31,10 +36,10 @@ class PassbookScreen extends StatefulWidget {
 }
 
 class _PassbookScreenState extends State<PassbookScreen> {
-  static const Color kBg = Color(0xFFF3F3F5);
-  static const Color kGold = Color(0xFF3C93F4);
-  static const Color kHeaderBlue = Color(0xFF3C93F4);
-  static const Color kHeaderDivider = Color(0xFF3C93F4);
+  static const Color kBg =  Color(0xff266FAF);
+  static const Color kGold =  Color(0xff266FAF);
+  static const Color kHeaderBlue =  Color(0xff266FAF);
+  static const Color kHeaderDivider =  Color(0xff266FAF);
   static const Color kValueText = Color(0xFF111827);
   static const Color kDivider = Color(0xFFE5E7EB);
   static const Color kStripe = Color(0x80E5E5E5);
@@ -69,6 +74,24 @@ class _PassbookScreenState extends State<PassbookScreen> {
     _fetchStatement();
   }
 
+  DateTime? _parseDate(String dateStr) {
+    try {
+      return DateTime.parse(dateStr);
+    } catch (_) {
+      try {
+        final parts = dateStr.split(RegExp(r'[/|-]'));
+        if (parts.length == 3) {
+          int d = int.parse(parts[0]);
+          int m = int.parse(parts[1]);
+          int y = int.parse(parts[2]);
+          if (y < 100) y += 2000;
+          return DateTime(y, m, d);
+        }
+      } catch (_) {}
+    }
+    return null;
+  }
+
   Future<void> _fetchStatement() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -94,11 +117,24 @@ class _PassbookScreenState extends State<PassbookScreen> {
         if (data['error'] == false && data['receipts'] != null) {
           final List<dynamic> receipts = data['receipts'];
           int slNo = 1;
-          final List<PassbookEntry> loadedEntries = receipts.map((item) {
+          double totalAmt = 0;
+          final List<PassbookEntry> loadedEntries = receipts.where((item) {
+            if (widget.dateRange == null) return true;
+            final dateStr = item['receipt_date']?.toString() ?? '';
+            final dt = _parseDate(dateStr);
+            if (dt == null) return true;
+            final start = widget.dateRange!.start;
+            final end = widget.dateRange!.end;
+            final s = DateTime(start.year, start.month, start.day);
+            final e = DateTime(end.year, end.month, end.day, 23, 59, 59);
+            return dt.isAfter(s.subtract(const Duration(seconds: 1))) && dt.isBefore(e.add(const Duration(seconds: 1)));
+          }).map((item) {
             final receiptNo = item['receipt_no']?.toString() ?? '';
             final receiptDate = item['receipt_date']?.toString() ?? '';
             final amount = item['amount']?.toString() ?? '0';
             final payType = item['p_type_label']?.toString() ?? '';
+            
+            totalAmt += double.tryParse(amount) ?? 0;
             
             return PassbookEntry(
               slNo: (slNo++).toString().padLeft(2, '0'),
@@ -109,7 +145,7 @@ class _PassbookScreenState extends State<PassbookScreen> {
             );
           }).toList();
           
-          final totalAmtStr = data['total_amount']?.toString() ?? '0';
+          final totalAmtStr = totalAmt.toStringAsFixed(0);
 
           if (mounted) {
             setState(() {
@@ -342,6 +378,31 @@ class _PassbookScreenState extends State<PassbookScreen> {
     );
   }
 
+  Future<File> _generatePdf() async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) => [
+          pw.Header(level: 0, child: pw.Text("Passbook")),
+          pw.TableHelper.fromTextArray(
+            context: context,
+            data: <List<String>>[
+              <String>['S.NO', 'RECEIPT NO', 'RECEIPT DATE', 'PAY TYPE', 'AMOUNT'],
+              ..._entries.map((e) => [e.slNo, e.receiptNo, e.receiptDate, e.payType, e.amount])
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/passbook.pdf');
+    await file.writeAsBytes(await pdf.save());
+    return file;
+  }
+
   // ---------------- Download & Share (fixed at bottom, no bottom nav) ----------------
   Widget _buildBottomActions() {
     return Container(
@@ -355,8 +416,15 @@ class _PassbookScreenState extends State<PassbookScreen> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    // TODO: hook up passbook PDF download
+                  onTap: () async {
+                    if (_entries.isEmpty) return;
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Generating PDF...')));
+                    try {
+                      final file = await _generatePdf();
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved to ${file.path}')));
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate PDF')));
+                    }
                   },
                   child: Container(
                     height: 36,
@@ -387,8 +455,15 @@ class _PassbookScreenState extends State<PassbookScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    // TODO: hook up passbook share
+                  onTap: () async {
+                    if (_entries.isEmpty) return;
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Preparing to share...')));
+                    try {
+                      final file = await _generatePdf();
+                      await Share.shareXFiles([XFile(file.path)], text: 'My Passbook');
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to share')));
+                    }
                   },
                   child: Container(
                     height: 36,

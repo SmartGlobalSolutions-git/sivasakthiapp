@@ -52,7 +52,7 @@ class MyChitsScreen extends StatefulWidget {
 
 class _MyChitsScreenState extends State<MyChitsScreen> {
   static const Color kBg = Color(0xFFF3F3F5);
-  static const Color kBlue = Color(0xFF3C93F4);
+  static const Color kBlue =Color(0xff266FAF);
   static const Color kLabel = Color(0xFF475569);
   static const Color kNavy = Color(0xFF1E293B);
 
@@ -281,7 +281,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.headset_mic,
                     size: 14,
-                    color: Color(0xFF3C93F4),
+                    color: Color(0xff266FAF),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -290,7 +290,7 @@ class _MyChitsScreenState extends State<MyChitsScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3C93F4),
+                    color: Color(0xff266FAF),
                   ),
                 ),
               ],

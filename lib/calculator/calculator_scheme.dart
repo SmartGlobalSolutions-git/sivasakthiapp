@@ -5,17 +5,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'chit_enquiry_dialog.dart';
 import '../services/device_location_service.dart';
+import '../setting/need_help.dart';
+import '../home/notification.dart';
 
 class CalculatorSchemeScreen extends StatefulWidget {
-  final String investmentAmount;
-  final String durationMonths;
-  final bool isEmi;
+  final int planId;
+  final String displayTopAmount;
 
   const CalculatorSchemeScreen({
     super.key,
-    this.investmentAmount = '1,00,000',
-    this.durationMonths = '20',
-    this.isEmi = false,
+    required this.planId,
+    required this.displayTopAmount,
   });
 
   @override
@@ -25,10 +25,13 @@ class CalculatorSchemeScreen extends StatefulWidget {
 class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
   bool _isLoading = true;
   String _displayTopAmount = '';
+  List<dynamic> _scheduleRows = [];
+  Map<String, dynamic>? _totals;
 
   @override
   void initState() {
     super.initState();
+    _displayTopAmount = widget.displayTopAmount;
     _fetchScheme();
   }
 
@@ -45,79 +48,33 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
           'lt': loc['lat'] ?? '123',
           'ln': loc['lng'] ?? '123',
           'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'id': widget.planId.toString(),
         },
       );
 
       if (response.statusCode == 200) {
-        debugPrint('Calculator Scheme API Response: ${response.body}');
+        debugPrint('Calculator Scheme ID API Response: ${response.body}');
         final data = json.decode(response.body);
-        if (data['chit'] != null) {
-          List<dynamic> chits = data['chit'];
-          
-          int targetAmount = int.tryParse(widget.investmentAmount.replaceAll(',', '').replaceAll(' ', '')) ?? 0;
-          
-          dynamic matchedChit;
-          bool isExactMatch = false;
-
-          for (var chit in chits) {
-            int chitValue = int.tryParse(chit['ch_value'].toString()) ?? 0;
-            int emiAmount = int.tryParse(chit['amount'].toString()) ?? 0;
-            int checkValue = widget.isEmi ? emiAmount : chitValue;
-
-            if (checkValue == targetAmount) {
-              matchedChit = chit;
-              isExactMatch = true;
-              break;
+        
+        if (mounted) {
+          setState(() {
+            if (data['schedule'] != null) {
+              _scheduleRows = data['schedule'];
             }
-          }
-
-          if (!isExactMatch && chits.isNotEmpty) {
-            chits.sort((a, b) {
-              int valA = int.tryParse(a[widget.isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
-              int valB = int.tryParse(b[widget.isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
-              return valA.compareTo(valB);
-            });
-
-            for (var chit in chits) {
-              int checkValue = int.tryParse(chit[widget.isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
-              if (checkValue >= targetAmount) {
-                matchedChit = chit;
-                break;
-              }
+            if (data['totals'] != null) {
+              _totals = data['totals'];
             }
-
-            matchedChit ??= chits.last;
-            
-            if (mounted) {
-              int shownValue = int.tryParse(matchedChit[widget.isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('We don\'t have a $targetAmount plan, so we are showing the $shownValue plan', style: GoogleFonts.inter(color: Colors.white)),
-                  backgroundColor: Colors.black,
-                  behavior: SnackBarBehavior.fixed,
-                ),
-              );
-            }
-          }
-
-          if (mounted && matchedChit != null) {
-            setState(() {
-              _displayTopAmount = matchedChit[widget.isEmi ? 'amount' : 'ch_value'].toString();
-              _isLoading = false;
-            });
-            return;
-          }
+            _isLoading = false;
+          });
         }
       }
     } catch (e) {
-      debugPrint('Error fetching scheme: $e');
-    }
-
-    if (mounted) {
-      setState(() {
-        _displayTopAmount = widget.investmentAmount;
-        _isLoading = false;
-      });
+      debugPrint('Error fetching scheme schedule: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
   @override
@@ -128,34 +85,13 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
     final double screenHeight = screenSize.height;
     final double scaleW = (screenWidth / 360.0).clamp(0.85, 1.25);
     final double scaleH = (screenHeight / 800.0).clamp(0.85, 1.25);
-    const primaryBlue = Color(0xFF3C93F4);
+    const primaryBlue =  Color(0xff266FAF);
 
     final double topPadding = mediaQuery.padding.top;
     final double bottomPadding = mediaQuery.padding.bottom;
     final double statusBarH = topPadding > 20 ? topPadding : 24.0;
 
-    final List<Map<String, String>> planRows = [
-      {'month': '1', 'sub': '5,000', 'div': '0', 'bid': '0', 'prize': '0'},
-      {'month': '2', 'sub': '5,000', 'div': '0', 'bid': '30,000', 'prize': '70,000'},
-      {'month': '3', 'sub': '3,750', 'div': '1,250', 'bid': '30,000', 'prize': '70,000'},
-      {'month': '4', 'sub': '3,750', 'div': '1,250', 'bid': '28,000', 'prize': '72,000'},
-      {'month': '5', 'sub': '3,850', 'div': '1,150', 'bid': '25,000', 'prize': '75,000'},
-      {'month': '6', 'sub': '4,000', 'div': '1,000', 'bid': '24,500', 'prize': '75,000'},
-      {'month': '7', 'sub': '4,025', 'div': '975', 'bid': '24,000', 'prize': '76,000'},
-      {'month': '8', 'sub': '4,050', 'div': '950', 'bid': '22,500', 'prize': '77,500'},
-      {'month': '9', 'sub': '4,125', 'div': '875', 'bid': '21,000', 'prize': '79,000'},
-      {'month': '10', 'sub': '4,200', 'div': '800', 'bid': '20,000', 'prize': '80,000'},
-      {'month': '11', 'sub': '4,250', 'div': '750', 'bid': '19,000', 'prize': '81,000'},
-      {'month': '12', 'sub': '4,300', 'div': '700', 'bid': '18,000', 'prize': '82,000'},
-      {'month': '13', 'sub': '4,350', 'div': '650', 'bid': '17,000', 'prize': '83,000'},
-      {'month': '14', 'sub': '4,400', 'div': '600', 'bid': '16,000', 'prize': '84,000'},
-      {'month': '15', 'sub': '4,450', 'div': '550', 'bid': '15,000', 'prize': '85,000'},
-      {'month': '16', 'sub': '4,500', 'div': '500', 'bid': '13,000', 'prize': '87,000'},
-      {'month': '17', 'sub': '4,600', 'div': '400', 'bid': '11,000', 'prize': '89,000'},
-      {'month': '18', 'sub': '4,700', 'div': '300', 'bid': '9,000', 'prize': '91,000'},
-      {'month': '19', 'sub': '4,800', 'div': '200', 'bid': '7,000', 'prize': '93,000'},
-      {'month': '20', 'sub': '4,900', 'div': '100', 'bid': '5,000', 'prize': '95,000'},
-    ];
+
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
@@ -194,7 +130,7 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
                 ),
                 titleSpacing: 0,
                 title: Text(
-                  'Subscription Plan',
+                  'Chit Scheme',
                   style: GoogleFonts.inter(
                     fontSize: (16 * scaleW).clamp(14.0, 18.0),
                     fontWeight: FontWeight.w400,
@@ -207,11 +143,9 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
                   // Need Help ? button
                   GestureDetector(
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Support representative will contact you soon!'),
-                          duration: Duration(seconds: 2),
-                        ),
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NeedHelpScreen()),
                       );
                     },
                     child: Container(
@@ -260,7 +194,12 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
                       errorBuilder: (context, error, stackTrace) =>
                           Icon(Icons.notifications_none, size: 20 * scaleW, color: const Color(0xFF1E2638)),
                     ),
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const NotificationScreen()),
+                      );
+                    },
                   ),
                   SizedBox(width: 6 * scaleW),
                 ],
@@ -363,9 +302,9 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
                                   behavior: const ScrollBehavior().copyWith(overscroll: false),
                                   child: ListView.builder(
                                     physics: const ClampingScrollPhysics(),
-                                    itemCount: planRows.length,
+                                    itemCount: _scheduleRows.length,
                                     itemBuilder: (context, index) {
-                                      final row = planRows[index];
+                                      final row = _scheduleRows[index];
                                       final isEven = index % 2 == 0;
                                       return Container(
                                         decoration: BoxDecoration(
@@ -379,11 +318,11 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
                                         ),
                                         child: Row(
                                           children: [
-                                            _buildDataCell(row['month']!, flex: 2, isMonth: true, scale: scaleW),
-                                            _buildDataCell(row['sub']!, flex: 3, scale: scaleW),
-                                            _buildDataCell(row['div']!, flex: 2, scale: scaleW),
-                                            _buildDataCell(row['bid']!, flex: 2, scale: scaleW),
-                                            _buildDataCell(row['prize']!, flex: 3, scale: scaleW, showRightBorder: false),
+                                            _buildDataCell(row['sno']?.toString() ?? '', flex: 2, isMonth: true, scale: scaleW),
+                                            _buildDataCell(row['due_amt']?.toString() ?? '0', flex: 3, scale: scaleW),
+                                            _buildDataCell(row['divident']?.toString() ?? '0', flex: 2, scale: scaleW),
+                                            _buildDataCell(row['bid_amt']?.toString() ?? '0', flex: 2, scale: scaleW),
+                                            _buildDataCell(row['payment']?.toString() ?? '0', flex: 3, scale: scaleW, showRightBorder: false),
                                           ],
                                         ),
                                       );
@@ -392,26 +331,26 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
                                 ),
                               ),
 
-                              // Total Row (Soft Blue #EBF4FE)
-                              Container(
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFEBF4FE),
-                                  border: Border(
-                                    top: BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
-                                    bottom: BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                              if (_totals != null)
+                                Container(
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFEBF4FE),
+                                    border: Border(
+                                      top: BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                                      bottom: BorderSide(color: Color(0xFFCBD5E1), width: 1.0),
+                                    ),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+                                  child: Row(
+                                    children: [
+                                      _buildSummaryCell('Total', flex: 2, isLabel: true, scale: scaleW),
+                                      _buildSummaryCell(_totals!['due_amt']?.toString() ?? '0', flex: 3, scale: scaleW),
+                                      _buildSummaryCell(_totals!['divident']?.toString() ?? '0', flex: 2, scale: scaleW),
+                                      _buildSummaryCell('—', flex: 2, scale: scaleW),
+                                      _buildSummaryCell(_totals!['total']?.toString() ?? '0', flex: 3, scale: scaleW, showRightBorder: false),
+                                    ],
                                   ),
                                 ),
-                                padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
-                                child: Row(
-                                  children: [
-                                    _buildSummaryCell('Total', flex: 2, isLabel: true, scale: scaleW),
-                                    _buildSummaryCell('87,000', flex: 3, scale: scaleW),
-                                    _buildSummaryCell('13,000', flex: 2, scale: scaleW),
-                                    _buildSummaryCell('—', flex: 2, scale: scaleW),
-                                    _buildSummaryCell('95,000', flex: 3, scale: scaleW, showRightBorder: false),
-                                  ],
-                                ),
-                              ),
 
                               // Indicative Note
                               Padding(
@@ -548,7 +487,7 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
           style: GoogleFonts.inriaSans(
             fontSize: 11 * scale,
             fontWeight: isMonth ? FontWeight.w700 : FontWeight.w400,
-            color: isMonth ? const Color(0xFF3C93F4) : const Color(0xFF1D2939),
+            color: isMonth ?  Color(0xff266FAF) : const Color(0xFF1D2939),
           ),
         ),
       ),
@@ -582,7 +521,7 @@ class _CalculatorSchemeScreenState extends State<CalculatorSchemeScreen> {
           style: GoogleFonts.inriaSans(
             fontSize: 11 * scale,
             fontWeight: FontWeight.w700,
-            color: const Color(0xFF3C93F4),
+            color: Color(0xff266FAF),
           ),
         ),
       ),

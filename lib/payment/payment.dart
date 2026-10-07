@@ -150,7 +150,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   border: _selectedTabIndex == 0
                       ? const Border(
                           bottom: BorderSide(
-                            color: Color(0xFF3C93F4),
+                            color: Color(0xff266FAF),
                             width: 2.0,
                           ),
                         )
@@ -165,7 +165,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ? FontWeight.w500
                         : FontWeight.w400,
                     color: _selectedTabIndex == 0
-                        ? const Color(0xFF3C93F4)
+                        ? const Color(0xff266FAF)
                         : const Color(0xFF6B7280),
                   ),
                 ),
@@ -197,7 +197,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   border: _selectedTabIndex == 1
                       ? const Border(
                           bottom: BorderSide(
-                            color: Color(0xFF3C93F4),
+                            color: Color(0xff266FAF),
                             width: 2.0,
                           ),
                         )
@@ -212,7 +212,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         ? FontWeight.w500
                         : FontWeight.w400,
                     color: _selectedTabIndex == 1
-                        ? const Color(0xFF3C93F4)
+                        ? const Color(0xff266FAF)
                         : const Color(0xFF6B7280),
                   ),
                 ),
@@ -301,8 +301,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF3C93F4),
-                      disabledBackgroundColor: const Color(0xFF3C93F4),
+                      backgroundColor: const Color(0xff266FAF),
+                      disabledBackgroundColor: const Color(0xff266FAF),
                       disabledForegroundColor: Colors.white,
                       elevation: 0,
                       shape: const StadiumBorder(),
@@ -382,12 +382,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
                           height: 22,
                           decoration: BoxDecoration(
                             color: item.isSelected
-                                ? const Color(0xFF2563EB)
+                                ? Color(0xff266FAF)
                                 : Colors.white,
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(
                               color: item.isSelected
-                                  ? const Color(0xFF2563EB)
+                                  ? Color(0xff266FAF)
                                   : const Color(0xFF94A3B8),
                               width: 1.6,
                             ),
@@ -408,7 +408,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         width: 42,
                         height: 42,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF2563EB),
+                          color: Color(0xff266FAF),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -460,7 +460,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                   TextSpan(
                                     text: item.groupDetail,
                                     style: const TextStyle(
-                                      color: Color(0xFF2563EB),
+                                      color: Color(0xff266FAF),
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -492,13 +492,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                               'assets/icons/user.png',
                               width: 14,
                               height: 14,
-                              color: const Color(0xFF2563EB),
+                              color: Color(0xff266FAF),
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(
                                 Icons.person,
                                 size: 14,
-                                color: Color(0xFF2563EB),
+                                color:Color(0xff266FAF),
                               ),
                             ),
                             const SizedBox(width: 4),
@@ -508,7 +508,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                                 fontFamily: 'Inter',
                                 fontSize: 11.0,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF2563EB),
+                                color: Color(0xff266FAF),
                               ),
                             ),
                           ],
@@ -558,7 +558,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             fallbackIcon: Icons.calendar_today_outlined,
                             label: 'Start - End Date',
                             value: '${item.startDate} -\n${item.endDate}',
-                            iconColor: const Color(0xFF2563EB),
+                            iconColor: Color(0xff266FAF),
                             isMultiLine: true,
                           ),
                         ),
@@ -578,7 +578,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                             fallbackIcon: Icons.currency_rupee,
                             label: 'Running Balance',
                             value: item.runningBalance,
-                            iconColor: const Color(0xFF2563EB),
+                            iconColor: Color(0xff266FAF),
                           ),
                         ),
                       ],
@@ -618,7 +618,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
             errorBuilder: (context, error, stackTrace) => Icon(
               fallbackIcon,
               size: 13,
-              color: iconColor ?? const Color(0xFF2563EB),
+              color: iconColor ?? Color(0xff266FAF),
             ),
           ),
           const SizedBox(width: 7),
@@ -730,7 +730,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF2563EB),
+                        color: Color(0xff266FAF),
                       ),
                     ),
                   ],
@@ -758,7 +758,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB),
+                    backgroundColor: Color(0xff266FAF),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(28),
                     ),
@@ -837,7 +837,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   errorBuilder: (context, error, stackTrace) => const Icon(
                     Icons.headset_mic,
                     size: 14,
-                    color: Color(0xFF3C93F4),
+                    color: Color(0xff266FAF),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -846,7 +846,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3C93F4),
+                    color:Color(0xff266FAF),
                   ),
                 ),
               ],
@@ -887,7 +887,7 @@ class _CardTopRightAccentPainter extends CustomPainter {
         begin: Alignment.topRight,
         end: Alignment.bottomLeft,
         colors: [
-          Color(0xFF3B82F6),
+          Color(0xff266FAF),
           Color(0xFF93C5FD),
         ],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))

@@ -6,7 +6,7 @@ class _Colors {
   static const Color pageBg = Color(0xFFF2F3F5);
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF000000);
-  static const Color black80 = Color(0xCC000000); // body text, #000000 @ 80%
+  static const Color black80 = Color(0xCC000000);
   static const Color divider = Color(0x1F000000);
 
   static const Color green = Color(0xFF058334); // time, highlight, icons

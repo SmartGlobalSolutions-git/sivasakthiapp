@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import '../services/device_location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -98,27 +101,80 @@ class _ChitEnquiryDialogState extends State<ChitEnquiryDialog> {
       _emailError = null;
     });
 
-    Navigator.of(context).pop();
+    _submitEnquiry(name, mobile, email, _messageController.text.trim());
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle, color: Colors.white, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'Enquiry submitted successfully! Our team will contact you.',
-                style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
+  bool _isSubmitting = false;
+
+  Future<void> _submitEnquiry(String name, String mobile, String email, String remarks) async {
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final loc = await DeviceLocationService.getLocation();
+      final deviceId = await DeviceLocationService.getDeviceId();
+
+      final response = await http.post(
+        Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+        body: {
+          'cid': '35318938',
+          'type': '6019',
+          'lt': loc['lat'] ?? '123',
+          'ln': loc['lng'] ?? '123',
+          'device_id': deviceId.isNotEmpty ? deviceId : '123',
+          'name': name,
+          'mobile': mobile,
+          'email': email,
+          'remarks': remarks,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success' || data['error'] == false) {
+          if (mounted) {
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        data['message']?.toString() ?? 'Enquiry submitted successfully! Our team will contact you.',
+                        style: GoogleFonts.poppins(fontSize: 13, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: const Color(0xFF0E8746),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
               ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF0E8746),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+            );
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(data['message']?.toString() ?? 'Failed to submit enquiry.'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Error submitting enquiry: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -177,7 +233,7 @@ class _ChitEnquiryDialogState extends State<ChitEnquiryDialog> {
                     errorBuilder: (context, error, stackTrace) => Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.pie_chart, size: 44 * scaleW, color: const Color(0xFF3C93F4)),
+                        Icon(Icons.pie_chart, size: 44 * scaleW, color:  Color(0xff266FAF)),
                         Text(
                           'Sivasakthi',
                           style: GoogleFonts.poppins(
@@ -208,7 +264,7 @@ class _ChitEnquiryDialogState extends State<ChitEnquiryDialog> {
                         style: GoogleFonts.inter(
                           fontSize: 18.48,
                           fontWeight: FontWeight.w600,
-                          color: const Color(0xFF3C93F4),
+                          color:  Color(0xff266FAF),
                           height: 1.0,
                           letterSpacing: 0,
                         ),
@@ -326,7 +382,7 @@ class _ChitEnquiryDialogState extends State<ChitEnquiryDialog> {
                   width: double.infinity,
                   height: (44 * scaleH).clamp(40.0, 48.0),
                   child: ElevatedButton(
-                    onPressed: _handleSubmit,
+                    onPressed: _isSubmitting ? null : _handleSubmit,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF0E8746),
                       foregroundColor: Colors.white,
@@ -335,21 +391,30 @@ class _ChitEnquiryDialogState extends State<ChitEnquiryDialog> {
                         borderRadius: BorderRadius.circular(6 * scaleW),
                       ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Submit Enquiry →',
-                          style: GoogleFonts.poppins(
-                            fontSize: (15 * scaleW).clamp(13.0, 17.0),
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            height: 1.0,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Submit Enquiry →',
+                                style: GoogleFonts.poppins(
+                                  fontSize: (15 * scaleW).clamp(13.0, 17.0),
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  height: 1.0,
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
                 SizedBox(height: 8 * scaleH),

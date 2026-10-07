@@ -250,7 +250,7 @@ class _ChitsDetailScreenState extends State<ChitsDetailScreen> {
                   height: 14,
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.headset_mic, size: 14, color: Color(0xFF3C93F4)),
+                      const Icon(Icons.headset_mic, size: 14, color: Color(0xff266FAF)),
                 ),
                 const SizedBox(width: 4),
                 Text(
@@ -258,7 +258,7 @@ class _ChitsDetailScreenState extends State<ChitsDetailScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
-                    color: const Color(0xFF3C93F4),
+                    color: Color(0xff266FAF),
                   ),
                 ),
               ],

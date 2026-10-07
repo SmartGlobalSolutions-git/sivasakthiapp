@@ -8,6 +8,7 @@ import 'package:siva_sakthi/setting/need_help.dart';
 import 'package:siva_sakthi/setting/profile_info.dart';
 import 'package:siva_sakthi/setting/setting.dart';
 import 'package:siva_sakthi/statement/statement.dart';
+import 'package:siva_sakthi/setting/reward.dart';
 
 /// Menu screen / drawer — matches Figma design
 class ProfileMenuScreen extends StatelessWidget {
@@ -44,7 +45,7 @@ class ProfileMenuScreen extends StatelessWidget {
   static const Color _cardColor = Color(0xFFF5F5F5);
   static const Color _black = Color(0xFF000000);
   static const Color _needHelpBorder = Color(0xFF9B9B9B);
-  static const Color _needHelpBlue = Color(0xFF3C93F4);
+  static const Color _needHelpBlue =Color(0xff266FAF);
 
   // ---- Asset paths (PNG) ----
   static const String _profileIcon = 'assets/icons/profile_menu.png';
@@ -134,7 +135,13 @@ class ProfileMenuScreen extends StatelessWidget {
                       MaterialPageRoute(builder: (_) => const SettingScreen()),
                     );
                   }),
-                  _MenuItemData('Rewards & Achievements', _rewardsIcon, onRewardsTap),
+                  _MenuItemData('Rewards & Achievements', _rewardsIcon, onRewardsTap ?? () {
+                    Navigator.of(context).maybePop();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RewardsAchievementsScreen()),
+                    );
+                  }),
                 ],
               ),
               const SizedBox(height: 22),

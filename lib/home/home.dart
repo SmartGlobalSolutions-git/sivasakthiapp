@@ -18,7 +18,7 @@ import 'package:siva_sakthi/my_chit/my_chits_screen.dart' hide ChitItem;
 import 'package:siva_sakthi/payment/enter_payment.dart';
 import 'package:siva_sakthi/payment/payment_model.dart';
 import 'package:siva_sakthi/calculator/chit_enquiry_dialog.dart';
-import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
+import 'package:siva_sakthi/calculator/calculator_scheme.dart';
 // ==========================================================
 // SIVA SAKTHI CHIT FUNDS - HOME SCREEN
 // ==========================================================
@@ -32,7 +32,7 @@ class SivaSakthiHomeScreen extends StatefulWidget {
 
 class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   // ---- Figma colors ----
-  static const Color kBlue = Color(0xFF3C93F4);
+  static const Color kBlue = Color(0xff266FAF);
   static const Color kBlack = Color(0xFF000000);
   static const Color kBorderGrey = Color(0xFF9B9B9B);
   static const Color kDivider = Color(0xFFD7D7D7);
@@ -59,6 +59,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
   int _noOfMembers = 20;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String _userName = 'Loading...';
+  bool _isLoadingPlan = false;
 
   @override
   void initState() {
@@ -774,10 +775,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: kBlue,
-        image: DecorationImage(
-          image: AssetImage('assets/home/lets_growth_bg.png'),
-          fit: BoxFit.cover,
-        ),
+
       ),
       padding: EdgeInsets.fromLTRB(w(16), h(24), w(16), h(28)),
       child: Column(
@@ -905,30 +903,151 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: _isLoadingPlan ? null : () async {
                         final invText = _investmentCtrl.text.trim();
                         final emiText = _emiCtrl.text.trim();
 
                         if (invText.isEmpty && emiText.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text('Please enter Investment Amount or EMI Amount'),
+                              content: Text('Please enter Investment Amount or EMI Amount', style: TextStyle(color: Colors.white)),
                               backgroundColor: Colors.black,
                               duration: Duration(seconds: 2),
+                              behavior: SnackBarBehavior.fixed,
                             ),
                           );
                           return;
                         }
+                        
+                        setState(() { _isLoadingPlan = true; });
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SubscriptionPlanScreen(
-                              investmentAmount: invText.isNotEmpty ? invText : emiText,
-                              durationMonths: _noOfEmis.toString(),
-                            ),
-                          ),
-                        );
+                        try {
+                          final loc = await DeviceLocationService.getLocation();
+                          final deviceId = await DeviceLocationService.getDeviceId();
+                          final response = await http.post(
+                            Uri.parse('https://chitsoft.in/wapp/api/chit_api/'),
+                            body: {
+                              'cid': '35318938',
+                              'type': '6003',
+                              'lt': loc['lat'] ?? '123',
+                              'ln': loc['lng'] ?? '123',
+                              'device_id': deviceId.isNotEmpty ? deviceId : '123',
+                            },
+                          );
+
+                          if (response.statusCode == 200) {
+                            final data = json.decode(response.body);
+                            if (data['chit'] != null) {
+                              List<dynamic> chits = data['chit'];
+                              
+                              final amountToPass = invText.isNotEmpty ? invText : emiText;
+                              int targetAmount = int.tryParse(amountToPass.replaceAll(',', '').replaceAll(' ', '')) ?? 0;
+                              int targetNom = _noOfEmis;
+                              bool isEmi = emiText.isNotEmpty;
+                              
+                              dynamic matchedChit;
+                              bool isExactMatch = false;
+
+                              for (var chit in chits) {
+                                int chitValue = int.tryParse(chit['ch_value'].toString()) ?? 0;
+                                int emiAmount = int.tryParse(chit['amount'].toString()) ?? 0;
+                                int checkValue = isEmi ? emiAmount : chitValue;
+                                int nom = int.tryParse(chit['nom'].toString()) ?? 0;
+
+                                if (checkValue == targetAmount && nom == targetNom) {
+                                  matchedChit = chit;
+                                  isExactMatch = true;
+                                  break;
+                                }
+                              }
+
+                              if (!isExactMatch && chits.isNotEmpty) {
+                                chits.sort((a, b) {
+                                  int valA = int.tryParse(a[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                                  int valB = int.tryParse(b[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                                  if (valA != valB) return valA.compareTo(valB);
+                                  
+                                  int nomA = int.tryParse(a['nom'].toString()) ?? 0;
+                                  int nomB = int.tryParse(b['nom'].toString()) ?? 0;
+                                  return nomA.compareTo(nomB);
+                                });
+
+                                for (var chit in chits) {
+                                  int checkValue = int.tryParse(chit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                                  int nom = int.tryParse(chit['nom'].toString()) ?? 0;
+                                  if (checkValue >= targetAmount && nom >= targetNom) {
+                                    matchedChit = chit;
+                                    break;
+                                  }
+                                }
+
+                                if (matchedChit == null) {
+                                  for (var chit in chits) {
+                                    int checkValue = int.tryParse(chit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                                    if (checkValue >= targetAmount) {
+                                      matchedChit = chit;
+                                      break;
+                                    }
+                                  }
+                                }
+
+                                matchedChit ??= chits.last;
+                                
+                                if (mounted) {
+                                  int shownValue = int.tryParse(matchedChit[isEmi ? 'amount' : 'ch_value'].toString()) ?? 0;
+                                  int shownNom = int.tryParse(matchedChit['nom'].toString()) ?? 0;
+                                  
+                                  String msg = '';
+                                  if (shownValue != targetAmount && shownNom != targetNom) {
+                                    msg = 'We don\'t have a ₹$targetAmount plan for $targetNom months. Showing nearest plan: ₹$shownValue for $shownNom months.';
+                                  } else if (shownValue != targetAmount) {
+                                    msg = 'We don\'t have a ₹$targetAmount plan. Showing nearest plan: ₹$shownValue.';
+                                  } else if (shownNom != targetNom) {
+                                    msg = 'We don\'t have this plan for $targetNom months. Showing nearest plan for $shownNom months.';
+                                  }
+
+                                  if (msg.isNotEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(msg, style: const TextStyle(color: Colors.white)),
+                                        backgroundColor: Colors.black,
+                                        behavior: SnackBarBehavior.fixed,
+                                      ),
+                                    );
+                                  }
+                                }
+                              }
+
+                              if (mounted && matchedChit != null) {
+                                int planId = matchedChit['id'];
+                                String displayTopAmount = matchedChit[isEmi ? 'amount' : 'ch_value'].toString();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CalculatorSchemeScreen(
+                                      planId: planId,
+                                      displayTopAmount: displayTopAmount,
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error fetching plans', style: TextStyle(color: Colors.white)),
+                                backgroundColor: Colors.black,
+                                behavior: SnackBarBehavior.fixed,
+                              ),
+                            );
+                          }
+                        } finally {
+                          if (mounted) {
+                            setState(() { _isLoadingPlan = false; });
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: kBlue,
@@ -941,14 +1060,20 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
                           borderRadius: BorderRadius.circular(w(24)),
                         ),
                       ),
-                      child: Text(
-                        'Submit',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: w(14),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      child: _isLoadingPlan
+                          ? SizedBox(
+                              width: w(16),
+                              height: w(16),
+                              child: const CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text(
+                              'Submit',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: w(14),
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ],
                 ),
@@ -1284,7 +1409,7 @@ class _SivaSakthiHomeScreenState extends State<SivaSakthiHomeScreen> {
           _quickLinkTile(
             w,
             h,
-            iconAsset: 'assets/setting/about.png',
+            iconAsset: 'assets/setting/about_us.png',
             fallbackIcon: Icons.info_outline,
             title: 'About Siva Sakthi',
             subtitle: 'About Siva Sakthi',
@@ -1665,7 +1790,7 @@ class _NeedHelpBottomSheetContentState extends State<_NeedHelpBottomSheetContent
               ElevatedButton(
                 onPressed: onCallTap,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3C93F4),
+                  backgroundColor:Color(0xff266FAF),
                   elevation: 0,
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   minimumSize: Size.zero,

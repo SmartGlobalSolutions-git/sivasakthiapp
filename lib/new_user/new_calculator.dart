@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:siva_sakthi/calculator/subscription_plan_screen.dart';
 
 enum CalculatorScheme { smartSavings, flexiCash, quickCash }
@@ -59,12 +60,13 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
+        scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(
             Icons.arrow_back,
-            color: Color(0xFF1E293B),
-            size: 24,
+            color: Color(0xFF000000),
+            size: 22,
           ),
           onPressed: () {
             if (Navigator.canPop(context)) {
@@ -76,10 +78,9 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
         title: const Text(
           'Let\'s Plan Your Growth',
           style: TextStyle(
-            color: Color(0xFF1E293B),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.2,
+            color: Color(0xFF000000),
+            fontSize: 16,
+            fontWeight: FontWeight.w400,
           ),
         ),
       ),
@@ -91,20 +92,8 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
               child: Stack(
                 clipBehavior: Clip.hardEdge,
                 children: [
-                  // Blue background with straight top (cropped -65) and torn bottom edge
-                  Positioned(
-                    top: -65,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: Image.asset(
-                      'assets/calculator/new_calculator.png',
-                      fit: BoxFit.fill,
-                      alignment: Alignment.bottomCenter,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: const Color(0xFF3C93F4),
-                      ),
-                    ),
+                  Positioned.fill(
+                    child: Container(color: const Color(0xff266FAF)),
                   ),
 
                   // Foreground Content (Radios + White Card)
@@ -171,12 +160,12 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Investment ₹',
-                                            style: TextStyle(
-                                              color: Color(0xFF3C93F4),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
+                                            style: GoogleFonts.inriaSans(
+                                              color: const Color(0xff266FAF),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -192,12 +181,12 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Month',
-                                            style: TextStyle(
-                                              color: Color(0xFF3C93F4),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
+                                            style: GoogleFonts.inriaSans(
+                                              color: const Color(0xff266FAF),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -220,12 +209,12 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          const Text(
+                                          Text(
                                             'Emi ₹',
-                                            style: TextStyle(
-                                              color: Color(0xFF3C93F4),
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
+                                            style: GoogleFonts.inriaSans(
+                                              color: const Color(0xff266FAF),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -250,26 +239,26 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     // Left: Note
-                                    const Expanded(
+                                    Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             'Note:',
-                                            style: TextStyle(
-                                              color: Color(0xFF64748B),
-                                              fontSize: 12.5,
+                                            style: GoogleFonts.inriaSans(
+                                              color: const Color(0xFF757575),
+                                              fontSize: 10.5,
                                               fontWeight: FontWeight.w600,
                                             ),
                                           ),
-                                          SizedBox(height: 2),
+                                          const SizedBox(height: 2),
                                           Text(
                                             'Enter Values In Multiples Of Lakhs\nIn Investment',
-                                            style: TextStyle(
-                                              color: Color(0xFF94A3B8),
-                                              fontSize: 11.5,
-                                              fontWeight: FontWeight.w500,
-                                              height: 1.25,
+                                            style: GoogleFonts.inriaSans(
+                                              color: const Color(0xFF757575),
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w400,
+                                              height: 1.2,
                                             ),
                                           ),
                                         ],
@@ -290,12 +279,12 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
                                           borderRadius: BorderRadius.circular(24),
                                         ),
                                       ),
-                                      child: const Text(
+                                      child: Text(
                                         'Submit',
-                                        style: TextStyle(
+                                        style: GoogleFonts.inter(
                                           color: Colors.white,
-                                          fontSize: 16.5,
-                                          fontWeight: FontWeight.w700,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
@@ -362,10 +351,10 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
           Flexible(
             child: Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 color: Colors.white,
-                fontSize: 15,
-                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
               ),
             ),
           ),
@@ -387,17 +376,17 @@ class _CalculatorScreen_newState extends State<CalculatorScreen_new> {
       child: TextField(
         controller: controller,
         keyboardType: TextInputType.number,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF0F172A),
+        style: GoogleFonts.inriaSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+          color: const Color(0xFF1D2939),
         ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFF94A3B8),
-            fontSize: 15,
-            fontWeight: FontWeight.normal,
+          hintStyle: GoogleFonts.inriaSans(
+            color: const Color(0xFF98A2B3),
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
           ),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           enabledBorder: OutlineInputBorder(
